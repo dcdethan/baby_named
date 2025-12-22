@@ -1,0 +1,112 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">AI智能起名</text>
+    <text class="subtitle">基于八字五行与中华文学</text>
+  </view>
+
+  <form bindsubmit="onSubmit">
+    <view class="form-container">
+      <!-- 父姓 -->
+      <view class="form-item card">
+        <view class="label">父姓 <text class="required">*</text></view>
+        <input
+          class="input"
+          name="fatherSurname"
+          placeholder="请输入父亲姓氏"
+          maxlength="2"
+        />
+      </view>
+
+      <!-- 母姓 -->
+      <view class="form-item card">
+        <view class="label">母姓 <text class="optional">（可选）</text></view>
+        <input
+          class="input"
+          name="motherSurname"
+          placeholder="请输入母亲姓氏"
+          maxlength="2"
+        />
+      </view>
+
+    <!-- 生日 -->
+      <view class="form-item card">
+        <view class="label">阳历生日 <text class="required">*</text></view>
+        <picker
+          mode="date"
+          name="birthday"
+          value="{{birthday}}"
+          bindchange="onBirthdayChange"
+          start="1900-01-01"
+          end="{{today}}"
+        >
+          <view class="picker">
+            {{birthday || '请选择出生日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- 性别 -->
+      <view class="form-item card">
+        <view class="label">性别 <text class="required">*</text></view>
+        <radio-group class="radio-group" name="gender">
+          <label class="radio-item">
+            <radio value="male" checked color="#07c160"/>
+            <text>男孩</text>
+          </label>
+          <label class="radio-item">
+            <radio value="female" color="#07c160"/>
+            <text>女孩</text>
+          </label>
+        </radio-group>
+      </view>
+
+      <!-- 起名风格 -->
+      <view class="form-item card">
+        <view class="label">起名风格 <text class="required">*</text></view>
+        <radio-group class="radio-group-vertical" name="style">
+          <label class="radio-item-vertical">
+            <radio value="shijing" checked color="#07c160"/>
+            <view class="radio-content">
+              <text class="radio-title">诗经</text>
+              <text class="radio-desc">温婉典雅，出自《诗经》</text>
+            </view>
+          </label>
+          <label class="radio-item-vertical">
+            <radio value="chuci" color="#07c160"/>
+            <view class="radio-content">
+              <text class="radio-title">楚辞</text>
+              <text class="radio-desc">浪漫豪放，出自《楚辞》</text>
+            </view>
+          </label>
+          <label class="radio-item-vertical">
+            <radio value="modern" color="#07c160"/>
+            <view class="radio-content">
+              <text class="radio-title">现代</text>
+              <text class="radio-desc">简洁大方，符合现代审美</text>
+            </view>
+          </label>
+          <label class="radio-item-vertical">
+            <radio value="zodiac" color="#07c160"/>
+            <view class="radio-content">
+              <text class="radio-title">生肖</text>
+              <text class="radio-desc">结合生肖喜忌</text>
+            </view>
+          </label>
+        </radio-group>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-container">
+      <button
+        class="btn-primary"
+        formType="submit"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+      >
+        {{loading ? '生成中...' : '开始起名'}}
+      </button>
+    </view>
+  </form>
+</view>

@@ -1,0 +1,16 @@
+{
+  "name": "ai-naming-miniprogram",
+  "version": "1.0.0",
+  "description": "AI智能起名微信小程序",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "@types/wechat-miniprogram": "^3.4.7",
+    "typescript": "^5.3.3",
+    "miniprogram-api-typings": "^3.12.2"
+  }
+}

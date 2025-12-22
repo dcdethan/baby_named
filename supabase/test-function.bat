@@ -1,0 +1,35 @@
+@echo off
+REM 测试 naming-expert Edge Function
+
+echo =========================================
+echo   测试 naming-expert Edge Function
+echo =========================================
+
+set ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlmem5yY3R4emR1Z3dicHZsZmZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2NzYyNzEsImV4cCI6MjA1MDI1MjI3MX0.sb_publishable_6RHnO6Ip_QyhM7uremQMmg_yjvA1omB
+
+echo.
+echo 测试数据:
+echo {
+echo   "fatherSurname": "张",
+echo   "motherSurname": "李",
+echo   "birthday": "2024-01-15",
+echo   "gender": "male",
+echo   "style": "shijing"
+echo }
+
+echo.
+echo 发送请求...
+echo.
+
+curl -i --location --request POST ^
+  "https://yfznrctxzdugwbpvlffk.supabase.co/functions/v1/naming-expert" ^
+  --header "Authorization: Bearer %ANON_KEY%" ^
+  --header "Content-Type: application/json" ^
+  --data "{\"fatherSurname\":\"张\",\"motherSurname\":\"李\",\"birthday\":\"2024-01-15\",\"gender\":\"male\",\"style\":\"shijing\"}"
+
+echo.
+echo.
+echo =========================================
+echo   测试完成
+echo =========================================
+pause
