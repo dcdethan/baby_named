@@ -2,7 +2,7 @@
 <view class="container">
   <view class="header">
     <text class="title">起名结果</text>
-    <text class="subtitle">AI 为您精心挑选</text>
+    <text class="subtitle">点击单字查看名字分析</text>
   </view>
 
   <!-- 八字信息 -->
@@ -28,19 +28,31 @@
     </view>
   </view>
 
-  <!-- 名字列表 -->
-  <view class="names-container">
-    <view class="card-title">推荐名字</view>
-    <view class="name-card card" wx:for="{{names}}" wx:key="name">
-      <view class="name-header">
-        <text class="name-text">{{item.name}}</text>
-        <text class="pinyin-text">{{item.pinyin}}</text>
-      </view>
-      <view class="wuxing-tag">
-        <text>五行：{{item.wuxing}}</text>
-      </view>
-      <view class="meaning-text">
-        {{item.meaning}}
+  <!-- 候选单字网格 -->
+  <view class="chars-section">
+    <view class="card-title">候选单字</view>
+    <view class="chars-grid">
+      <view
+        class="char-card {{expandedIndex === index ? 'expanded' : ''}}"
+        wx:for="{{chars}}"
+        wx:key="char"
+        data-index="{{index}}"
+        bindtap="onCharTap"
+      >
+        <view class="char-main">
+          <text class="char-text">{{item.char}}</text>
+          <text class="char-pinyin">{{item.pinyin}}</text>
+          <view class="char-wuxing">{{item.wuxing}}</view>
+        </view>
+
+        <!-- 展开的名字分析 -->
+        <view class="char-detail" wx:if="{{expandedIndex === index}}">
+          <view class="detail-name">
+            <text class="full-name">{{item.fullName}}</text>
+            <text class="full-pinyin">{{item.fullPinyin}}</text>
+          </view>
+          <view class="detail-analysis">{{item.analysis}}</view>
+        </view>
       </view>
     </view>
   </view>

@@ -1,8 +1,8 @@
 // pages/result/result.ts
-import { NameResult } from '../../types/index'
+import { CharResult } from '../../types/index'
 
 interface ResultData {
-  names: NameResult[]
+  chars: CharResult[]
   bazi?: {
     year: string
     month: string
@@ -13,8 +13,9 @@ interface ResultData {
 
 Page({
   data: {
-    names: [] as NameResult[],
-    bazi: null as ResultData['bazi'] | null
+    chars: [] as CharResult[],
+    bazi: null as ResultData['bazi'] | null,
+    expandedIndex: -1  // 当前展开的单字索引，-1表示都没展开
   },
 
   onLoad(options: any) {
@@ -22,7 +23,7 @@ Page({
       if (options.data) {
         const resultData: ResultData = JSON.parse(decodeURIComponent(options.data))
         this.setData({
-          names: resultData.names || [],
+          chars: resultData.chars || [],
           bazi: resultData.bazi || null
         })
       } else {
@@ -47,6 +48,16 @@ Page({
   },
 
   /**
+   * 点击单字卡片
+   */
+  onCharTap(e: any) {
+    const index = e.currentTarget.dataset.index
+    this.setData({
+      expandedIndex: this.data.expandedIndex === index ? -1 : index
+    })
+  },
+
+  /**
    * 返回重新起名
    */
   onBack() {
@@ -57,10 +68,7 @@ Page({
    * 分享结果
    */
   onShare() {
-    // 生成分享内容
     const shareText = this.generateShareText()
-
-    // 设置剪贴板
     wx.setClipboardData({
       data: shareText,
       success: () => {
@@ -76,26 +84,23 @@ Page({
    * 生成分享文本
    */
   generateShareText(): string {
-    const { names, bazi } = this.data
+    const { chars, bazi } = this.data
     let text = '【AI智能起名结果】\n\n'
 
     if (bazi) {
       text += `八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}\n\n`
     }
 
-    text += '推荐名字：\n'
-    names.forEach((name, index) => {
-      text += `\n${index + 1}. ${name.name}（${name.pinyin}）\n`
-      text += `   五行：${name.wuxing}\n`
-      text += `   寓意：${name.meaning}\n`
+    text += '候选名字：\n'
+    chars.forEach((char, index) => {
+      text += `\n${index + 1}. ${char.fullName}（${char.fullPinyin}）\n`
+      text += `   五行：${char.wuxing}\n`
+      text += `   分析：${char.analysis}\n`
     })
 
     return text
   },
 
-  /**
-   * 分享配置
-   */
   onShareAppMessage() {
     return {
       title: 'AI智能起名 - 基于八字五行与中华文学',
@@ -103,9 +108,6 @@ Page({
     }
   },
 
-  /**
-   * 分享到朋友圈
-   */
   onShareTimeline() {
     return {
       title: 'AI智能起名 - 基于八字五行与中华文学'

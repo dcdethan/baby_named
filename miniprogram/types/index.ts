@@ -30,13 +30,15 @@ export interface NamingParams {
 }
 
 /**
- * 单个起名结果
+ * 候选单字结果
  */
-export interface NameResult {
-  name: string              // 姓名
-  pinyin: string            // 拼音
-  wuxing: string            // 五行属性
-  meaning: string           // 寓意说明
+export interface CharResult {
+  char: string              // 单字
+  pinyin: string            // 单字拼音
+  wuxing: string            // 单字五行
+  fullName: string          // 完整名字（姓+字）
+  fullPinyin: string        // 完整名字拼音
+  analysis: string          // 名字详细分析
 }
 
 /**
@@ -45,7 +47,7 @@ export interface NameResult {
 export interface NamingResponse {
   success: boolean
   data?: {
-    names: NameResult[]
+    chars: CharResult[]
     bazi?: {
       year: string
       month: string
