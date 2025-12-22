@@ -39,8 +39,13 @@ Page({
    * 父姓输入
    */
   onFatherSurnameInput(e: any) {
+    let value = e.detail.value
+    // 限制最多输入2个字符
+    if (value.length > 2) {
+      value = value.slice(0, 2)
+    }
     this.setData({
-      'formData.fatherSurname': e.detail.value
+      'formData.fatherSurname': value
     })
   },
 
@@ -48,8 +53,13 @@ Page({
    * 母姓输入
    */
   onMotherSurnameInput(e: any) {
+    let value = e.detail.value
+    // 限制最多输入2个字符
+    if (value.length > 2) {
+      value = value.slice(0, 2)
+    }
     this.setData({
-      'formData.motherSurname': e.detail.value
+      'formData.motherSurname': value
     })
   },
 

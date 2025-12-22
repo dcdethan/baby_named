@@ -16,7 +16,6 @@
           value="{{formData.fatherSurname}}"
           bindinput="onFatherSurnameInput"
           placeholder="请输入父亲姓氏"
-          maxlength="2"
         />
       </view>
 
@@ -29,7 +28,6 @@
           value="{{formData.motherSurname}}"
           bindinput="onMotherSurnameInput"
           placeholder="请输入母亲姓氏"
-          maxlength="2"
         />
       </view>
 
