@@ -5,9 +5,7 @@
   "scripts": {
     "tsc": "tsc"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/wechat-miniprogram": "^3.4.7",
     "typescript": "^5.3.3",

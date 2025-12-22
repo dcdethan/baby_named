@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase link:*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(test:*)",
+      "Bash(npm install)",
+      "Bash(npm run tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git push:*)",
+      "Bash(git ls-remote:*)"
+    ]
+  }
+}

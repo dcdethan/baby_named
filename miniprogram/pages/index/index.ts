@@ -130,13 +130,22 @@ Page({
         params
       )
 
+      console.log('Edge Function 返回的原始数据:', data)
+      console.log('Edge Function 错误:', error)
+
       if (error || !data || !data.success) {
         throw new Error(data?.error || '起名失败，请重试')
       }
 
+      console.log('data.data:', data.data)
+      console.log('data.data.chars 长度:', data.data?.chars?.length || 0)
+
       // 跳转到结果页面
+      const resultData = JSON.stringify(data.data)
+      console.log('准备传递给结果页的数据:', resultData)
+
       wx.navigateTo({
-        url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(data.data))}`
+        url: `/pages/result/result?data=${encodeURIComponent(resultData)}`
       })
 
     } catch (err: any) {

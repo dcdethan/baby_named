@@ -13,6 +13,8 @@
         <input
           class="input"
           name="fatherSurname"
+          value="{{formData.fatherSurname}}"
+          bindinput="onFatherSurnameInput"
           placeholder="请输入父亲姓氏"
           maxlength="2"
         />
@@ -24,6 +26,8 @@
         <input
           class="input"
           name="motherSurname"
+          value="{{formData.motherSurname}}"
+          bindinput="onMotherSurnameInput"
           placeholder="请输入母亲姓氏"
           maxlength="2"
         />
@@ -35,13 +39,13 @@
         <picker
           mode="date"
           name="birthday"
-          value="{{birthday}}"
+          value="{{formData.birthday}}"
           bindchange="onBirthdayChange"
           start="1900-01-01"
           end="{{today}}"
         >
           <view class="picker">
-            {{birthday || '请选择出生日期'}}
+            {{formData.birthday || '请选择出生日期'}}
           </view>
         </picker>
       </view>

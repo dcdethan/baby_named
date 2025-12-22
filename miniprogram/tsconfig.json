@@ -12,9 +12,9 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "lib": ["ES2015"],
-    "types": ["@types/wechat-miniprogram"],
-    "typeRoots": ["./node_modules/@types"],
+    "lib": ["ES2017"],
+    "types": ["miniprogram-api-typings"],
+    "typeRoots": ["./node_modules/@types", "./node_modules"],
     "allowSyntheticDefaultImports": true,
     "removeComments": false,
     "preserveConstEnums": true,

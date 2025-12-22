@@ -20,13 +20,26 @@ Page({
 
   onLoad(options: any) {
     try {
+      console.log('结果页接收到的 options:', options)
+
       if (options.data) {
-        const resultData: ResultData = JSON.parse(decodeURIComponent(options.data))
+        const decodedData = decodeURIComponent(options.data)
+        console.log('解码后的数据:', decodedData)
+
+        const resultData: ResultData = JSON.parse(decodedData)
+        console.log('解析后的 resultData:', resultData)
+        console.log('chars 数组:', resultData.chars)
+        console.log('chars 数组长度:', resultData.chars?.length || 0)
+        console.log('bazi 信息:', resultData.bazi)
+
         this.setData({
           chars: resultData.chars || [],
           bazi: resultData.bazi || null
         })
+
+        console.log('页面 data 设置后:', this.data)
       } else {
+        console.error('options.data 为空')
         wx.showToast({
           title: '数据加载失败',
           icon: 'none'

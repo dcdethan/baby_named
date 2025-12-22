@@ -96,11 +96,11 @@ function calculateBazi(birthday: string): BaziInfo {
 
     let wuxingResult = ''
     if (lackingWuxing.length > 0) {
-      wuxingResult = \`缺\${lackingWuxing.join('、')}\`
+      wuxingResult = `缺${lackingWuxing.join('、')}`
     } else {
       const dominant = Object.entries(wuxingCount)
         .sort((a, b) => b[1] - a[1])[0][0]
-      wuxingResult = \`\${dominant}旺\`
+      wuxingResult = `${dominant}旺`
     }
 
     return {
@@ -133,18 +133,18 @@ function buildPrompt(params: NamingParams, bazi: BaziInfo): string {
     zodiac: '生肖喜忌，要求结合生肖特点选字'
   }
 
-  return \`你是一位精通中国传统文化和姓名学的起名专家。
+  return `你是一位精通中国传统文化和姓名学的起名专家。
 
 请根据以下信息为宝宝推荐6个候选单字，每个字将与姓氏组成两字名（姓+字）。
 
 **基本信息**
-- 姓氏：\${surname}
-- 性别：\${genderText}
-- 八字：\${bazi.year} \${bazi.month} \${bazi.day} \${bazi.hour}
-- 五行：\${bazi.result}
+- 姓氏：${surname}
+- 性别：${genderText}
+- 八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}
+- 五行：${bazi.result}
 
 **选字要求**
-- 风格：\${styleMap[style]}
+- 风格：${styleMap[style]}
 - 数量：精选 6 个单字
 - 每个字需要：
   1. 补足五行不足或平衡五行
@@ -159,14 +159,14 @@ function buildPrompt(params: NamingParams, bazi: BaziInfo): string {
       "char": "瑞",
       "pinyin": "ruì",
       "wuxing": "金",
-      "fullName": "\${surname}瑞",
+      "fullName": "${surname}瑞",
       "fullPinyin": "xìng ruì",
       "analysis": "详细分析这个名字的寓意、五行补益、字义解读、文化内涵等（50-80字）"
     }
   ]
 }
 
-请直接输出 JSON，不要有任何其他文字。\`
+请直接输出 JSON，不要有任何其他文字。`
 }
 
 /**
@@ -182,7 +182,7 @@ async function callDeepSeek(prompt: string): Promise<DeepSeekResponse> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': \`Bearer \${apiKey}\`
+      'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
       model: 'deepseek-chat',
@@ -207,14 +207,32 @@ async function callDeepSeek(prompt: string): Promise<DeepSeekResponse> {
   const data = await response.json()
   const content = data.choices[0]?.message?.content
 
+  console.log('DeepSeek 原始返回:', content)
+
   if (!content) {
     throw new Error('AI 返回内容为空')
   }
 
   try {
-    return JSON.parse(content)
+    const parsed = JSON.parse(content)
+    console.log('解析后的数据:', parsed)
+    console.log('chars 数组长度:', parsed.chars?.length || 0)
+
+    // 验证返回的数据结构
+    if (!parsed.chars || !Array.isArray(parsed.chars)) {
+      console.error('chars 字段缺失或不是数组:', parsed)
+      throw new Error('AI 返回的数据格式错误：缺少 chars 数组')
+    }
+
+    if (parsed.chars.length === 0) {
+      console.error('chars 数组为空')
+      throw new Error('AI 没有返回任何候选单字')
+    }
+
+    return parsed
   } catch (error) {
     console.error('JSON 解析错误:', content)
+    console.error('错误详情:', error)
     throw new Error('AI 返回格式错误')
   }
 }
@@ -285,25 +303,34 @@ serve(async (req) => {
     console.log('调用 DeepSeek API...')
     const aiResult = await callDeepSeek(prompt)
 
+    console.log('AI 返回的 chars 数量:', aiResult.chars?.length || 0)
+    if (aiResult.chars && aiResult.chars.length > 0) {
+      console.log('第一个候选字示例:', aiResult.chars[0])
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     await saveToDatabase(supabase, params, bazi, aiResult.chars)
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          chars: aiResult.chars,
-          bazi: {
-            year: bazi.year,
-            month: bazi.month,
-            day: bazi.day,
-            hour: bazi.hour
-          }
+    const responseData = {
+      success: true,
+      data: {
+        chars: aiResult.chars,
+        bazi: {
+          year: bazi.year,
+          month: bazi.month,
+          day: bazi.day,
+          hour: bazi.hour
         }
-      }),
+      }
+    }
+
+    console.log('准备返回给前端的数据:', JSON.stringify(responseData))
+
+    return new Response(
+      JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
