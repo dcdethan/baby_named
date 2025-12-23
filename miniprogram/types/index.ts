@@ -1,22 +1,14 @@
 // types/index.ts
 
 /**
- * 起名风格枚举
+ * 起名风格类型
  */
-export enum NamingStyle {
-  SHIJING = 'shijing',      // 诗经
-  CHUCI = 'chuci',          // 楚辞
-  MODERN = 'modern',        // 现代
-  ZODIAC = 'zodiac'         // 生肖
-}
+export type NamingStyle = 'shijing' | 'chuci' | 'modern' | 'zodiac'
 
 /**
- * 性别枚举
+ * 性别类型
  */
-export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female'
-}
+export type Gender = 'male' | 'female'
 
 /**
  * 起名请求参数

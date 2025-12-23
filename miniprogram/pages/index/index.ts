@@ -17,8 +17,8 @@ Page({
       fatherSurname: '',
       motherSurname: '',
       birthday: '',
-      gender: 'male' as Gender,
-      style: 'shijing' as NamingStyle
+      gender: 'male',
+      style: 'shijing'
     } as FormData,
     loading: false,
     today: ''

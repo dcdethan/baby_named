@@ -1,1 +1,5 @@
-".tar.gz" 
+*.tar.gz
+.claude/
+node_modules/
+miniprogram_npm/
+.env

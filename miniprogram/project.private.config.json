@@ -1,9 +1,9 @@
 {
   "libVersion": "3.12.1",
-  "projectname": "miniprogram",
+  "projectname": "miniprogram11",
   "condition": {},
   "setting": {
-    "urlCheck": false,
+    "urlCheck": true,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,
