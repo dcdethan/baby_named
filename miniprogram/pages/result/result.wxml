@@ -1,0 +1,65 @@
+<!--pages/result/result.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">起名结果</text>
+    <text class="subtitle">点击单字查看名字分析</text>
+  </view>
+
+  <!-- 八字信息 -->
+  <view class="bazi-card card" wx:if="{{bazi}}">
+    <view class="card-title">八字信息</view>
+    <view class="bazi-content">
+      <view class="bazi-item">
+        <text class="bazi-label">年柱</text>
+        <text class="bazi-value">{{bazi.year}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">月柱</text>
+        <text class="bazi-value">{{bazi.month}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">日柱</text>
+        <text class="bazi-value">{{bazi.day}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">时柱</text>
+        <text class="bazi-value">{{bazi.hour}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 候选单字网格 -->
+  <view class="chars-section">
+    <view class="card-title">候选单字</view>
+    <view class="chars-grid">
+      <view
+        class="char-card {{expandedIndex === index ? 'expanded' : ''}}"
+        wx:for="{{chars}}"
+        wx:key="char"
+        data-index="{{index}}"
+        bindtap="onCharTap"
+      >
+        <view class="char-main">
+          <text class="char-text">{{item.char}}</text>
+          <text class="char-pinyin">{{item.pinyin}}</text>
+          <view class="char-wuxing">{{item.wuxing}}</view>
+        </view>
+
+        <!-- 展开的名字分析 -->
+        <view class="char-detail" wx:if="{{expandedIndex === index}}">
+          <view class="detail-name">
+            <text class="full-name">{{item.fullName}}</text>
+            <text class="full-pinyin">{{item.fullPinyin}}</text>
+          </view>
+          <view class="detail-analysis">{{item.analysis}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-secondary" bindtap="onBack">返回重新起名</button>
+    <button class="btn-primary" bindtap="onShare">分享结果</button>
+  </view>
+</view>

@@ -1,0 +1,11 @@
+# Supabase
+.branches
+.temp
+.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
