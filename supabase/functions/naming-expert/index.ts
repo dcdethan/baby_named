@@ -12,11 +12,12 @@ const corsHeaders = {
 
 // 类型定义
 interface NamingParams {
-  fatherSurname: string
-  motherSurname?: string
+  surname: string
   birthday: string
   gender: 'male' | 'female'
-  style: 'shijing' | 'chuci' | 'modern' | 'zodiac'
+  style: 'shijing' | 'chuci' | 'modern'
+  useWuxing: 'yes' | 'no'
+  nameCount: 'single' | 'double'
 }
 
 interface BaziInfo {
@@ -25,7 +26,10 @@ interface BaziInfo {
   day: string
   hour: string
   wuxing: string[]
-  result: string
+  wuxingResult: string
+  wuxingExplanation: string
+  lackingElements: string[]
+  dominantElement: string | null
 }
 
 // 候选单字结果
@@ -40,6 +44,23 @@ interface CharResult {
 
 interface DeepSeekResponse {
   chars: CharResult[]
+}
+
+// 五行相生相克解释
+const wuxingExplanations: { [key: string]: string } = {
+  '金': '金主义，代表坚毅、果断、公正。金旺者性格刚正，做事有魄力，但需注意过刚易折。',
+  '木': '木主仁，代表仁慈、宽厚、生长。木旺者性格温和，富有同情心，但需注意优柔寡断。',
+  '水': '水主智，代表聪慧、灵活、深沉。水旺者思维敏捷，善于变通，但需注意过于多虑。',
+  '火': '火主礼，代表热情、积极、开朗。火旺者性格活泼，待人热诚，但需注意急躁冲动。',
+  '土': '土主信，代表诚实、稳重、包容。土旺者性格踏实，值得信赖，但需注意固执保守。'
+}
+
+const wuxingLackExplanations: { [key: string]: string } = {
+  '金': '缺金者可能意志力稍弱，建议取名补金，可增强决断力和执行力。',
+  '木': '缺木者可能创造力不足，建议取名补木，可增强生机活力和仁爱之心。',
+  '水': '缺水者可能思维不够灵活，建议取名补水，可增强智慧和应变能力。',
+  '火': '缺火者可能热情不足，建议取名补火，可增强积极性和表达能力。',
+  '土': '缺土者可能稳定性不够，建议取名补土，可增强踏实感和信用度。'
 }
 
 /**
@@ -83,7 +104,9 @@ function calculateBazi(birthday: string): BaziInfo {
       ganWuxing[gan[yearGanIndex]],
       zhiWuxing[zhi[yearZhiIndex]],
       ganWuxing[gan[monthGanIndex]],
-      zhiWuxing[zhi[monthZhiIndex]]
+      zhiWuxing[zhi[monthZhiIndex]],
+      ganWuxing[gan[dayGanIndex]],
+      zhiWuxing[zhi[dayZhiIndex]]
     ]
 
     const wuxingCount: { [key: string]: number } = {}
@@ -92,15 +115,24 @@ function calculateBazi(birthday: string): BaziInfo {
     })
 
     const allWuxing = ['金', '木', '水', '火', '土']
-    const lackingWuxing = allWuxing.filter(wx => !wuxingCount[wx])
+    const lackingElements = allWuxing.filter(wx => !wuxingCount[wx])
+
+    // 找出最旺的五行
+    const sortedWuxing = Object.entries(wuxingCount).sort((a, b) => b[1] - a[1])
+    const dominantElement = sortedWuxing.length > 0 ? sortedWuxing[0][0] : null
 
     let wuxingResult = ''
-    if (lackingWuxing.length > 0) {
-      wuxingResult = `缺${lackingWuxing.join('、')}`
+    let wuxingExplanation = ''
+
+    if (lackingElements.length > 0) {
+      wuxingResult = `五行缺${lackingElements.join('、')}`
+      wuxingExplanation = lackingElements.map(el => wuxingLackExplanations[el]).join(' ')
+      if (dominantElement) {
+        wuxingExplanation += ` 同时${dominantElement}行较旺，${wuxingExplanations[dominantElement]}`
+      }
     } else {
-      const dominant = Object.entries(wuxingCount)
-        .sort((a, b) => b[1] - a[1])[0][0]
-      wuxingResult = `${dominant}旺`
+      wuxingResult = `五行${dominantElement}旺`
+      wuxingExplanation = wuxingExplanations[dominantElement || '土'] + ' 五行俱全，整体较为平衡。'
     }
 
     return {
@@ -109,7 +141,10 @@ function calculateBazi(birthday: string): BaziInfo {
       day: dayGanZhi,
       hour: hourGanZhi,
       wuxing,
-      result: wuxingResult
+      wuxingResult,
+      wuxingExplanation,
+      lackingElements,
+      dominantElement
     }
   } catch (error) {
     console.error('八字计算错误:', error)
@@ -117,44 +152,49 @@ function calculateBazi(birthday: string): BaziInfo {
   }
 }
 
-/**
- * 构造 AI Prompt - 生成候选单字
- */
-function buildPrompt(params: NamingParams, bazi: BaziInfo): string {
-  const { fatherSurname, gender, style } = params
+// 更新后的 DeepSeek 响应接口
+interface DeepSeekResponseNew {
+  singleChars?: CharResult[]
+  doubleChars?: CharResult[]
+}
 
-  const surname = fatherSurname
+/**
+ * 构造 AI Prompt - 生成候选名字
+ */
+function buildPrompt(params: NamingParams, bazi: BaziInfo | null): string {
+  const { surname, gender, style, useWuxing, nameCount } = params
+
   const genderText = gender === 'male' ? '男孩' : '女孩'
 
   const styleMap: { [key: string]: string } = {
-    shijing: '诗经，要求选字温婉典雅，富有诗意',
-    chuci: '楚辞，要求选字浪漫豪放，气势磅礴',
-    modern: '现代风格，要求选字简洁大方，符合现代审美',
-    zodiac: '生肖喜忌，要求结合生肖特点选字'
+    shijing: `诗经风格。名字源自《诗经》，体现草木风物与人文美德的典雅意境，用字古典而不生僻，整体气质温润端庄，寓意侧重品德修养与生活安宁。`,
+    chuci: `楚辞风格。名字源自《楚辞》（以《离骚》《九歌》等为代表），强调香草美人、天地遨游等浪漫意象，气质飘逸深邃，用字可稍具独特性，寓意高远，突出理想追求与精神探索。`,
+    modern: `现代风格。名字源自现代汉语审美词汇，融合自然意象或积极状态，整体简洁明快、音韵悦耳、易读易写，寓意乐观向上，突出智慧、快乐与成长潜力。`
   }
 
-  return `你是一位精通中国传统文化和姓名学的起名专家。
+  // 根据性别给出的额外提示
+  const genderHint = gender === 'male'
+    ? '可使用中性词，但不得使用明显女性化的名字。'
+    : '可使用中性词，但不得使用明显男性化的名字。'
 
-请根据以下信息为宝宝推荐6个候选单字，每个字将与姓氏组成两字名（姓+字）。
-
-**基本信息**
-- 姓氏：${surname}
-- 性别：${genderText}
+  // 五行相关提示
+  let wuxingHint = ''
+  if (useWuxing === 'yes' && bazi) {
+    wuxingHint = `
+**八字五行信息**
 - 八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}
-- 五行：${bazi.result}
+- 五行分析：${bazi.wuxingResult}
+- 选字时请注意补足缺失的五行，或平衡过旺的五行。`
+  }
 
-**选字要求**
-- 风格：${styleMap[style]}
-- 数量：精选 6 个单字
-- 每个字需要：
-  1. 补足五行不足或平衡五行
-  2. 与姓氏搭配字音和谐
-  3. 寓意美好，符合性别特征
-  4. 避免生僻字和谐音不佳的字
+  // 根据名字字数生成不同的要求
+  let nameRequirement = ''
+  let outputFormat = ''
 
-**输出格式（严格 JSON）**
-{
-  "chars": [
+  if (nameCount === 'single') {
+    nameRequirement = `请推荐6个候选单字，每个字将与姓氏组成两字名（姓+字）。`
+    outputFormat = `{
+  "singleChars": [
     {
       "char": "瑞",
       "pinyin": "ruì",
@@ -164,7 +204,44 @@ function buildPrompt(params: NamingParams, bazi: BaziInfo): string {
       "analysis": "详细分析这个名字的寓意、五行补益、字义解读、文化内涵等（50-80字）"
     }
   ]
-}
+}`
+  } else if (nameCount === 'double') {
+    nameRequirement = `请推荐6个候选双字名，每组双字将与姓氏组成三字名（姓+双字）。`
+    outputFormat = `{
+  "doubleChars": [
+    {
+      "char": "子轩",
+      "pinyin": "zǐ xuān",
+      "wuxing": "水木",
+      "fullName": "${surname}子轩",
+      "fullPinyin": "xìng zǐ xuān",
+      "analysis": "详细分析这个名字的寓意、五行补益、字义解读、文化内涵等（50-80字）"
+    }
+  ]
+}`
+  }
+
+  return `你是一位精通中国传统文化和姓名学的起名专家。
+
+${nameRequirement}
+
+**基本信息**
+- 姓氏：${surname}
+- 性别：${genderText}
+${wuxingHint}
+
+**选字要求**
+- 风格：${styleMap[style]}
+- ${genderHint}
+- 数量：精选 6 个候选名
+- 每个名字需要：
+  1. ${useWuxing === 'yes' ? '补足五行不足或平衡五行' : '寓意美好'}
+  2. 与姓氏搭配字音和谐
+  3. 符合性别特征
+  4. 避免生僻字和谐音不佳的字
+
+**输出格式（严格 JSON）**
+${outputFormat}
 
 请直接输出 JSON，不要有任何其他文字。`
 }
@@ -172,7 +249,7 @@ function buildPrompt(params: NamingParams, bazi: BaziInfo): string {
 /**
  * 调用 DeepSeek API
  */
-async function callDeepSeek(prompt: string): Promise<DeepSeekResponse> {
+async function callDeepSeek(prompt: string, nameCount: string): Promise<DeepSeekResponseNew> {
   const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
   if (!apiKey) {
     throw new Error('DEEPSEEK_API_KEY 未配置')
@@ -216,17 +293,28 @@ async function callDeepSeek(prompt: string): Promise<DeepSeekResponse> {
   try {
     const parsed = JSON.parse(content)
     console.log('解析后的数据:', parsed)
-    console.log('chars 数组长度:', parsed.chars?.length || 0)
 
-    // 验证返回的数据结构
-    if (!parsed.chars || !Array.isArray(parsed.chars)) {
-      console.error('chars 字段缺失或不是数组:', parsed)
-      throw new Error('AI 返回的数据格式错误：缺少 chars 数组')
-    }
-
-    if (parsed.chars.length === 0) {
-      console.error('chars 数组为空')
-      throw new Error('AI 没有返回任何候选单字')
+    // 根据 nameCount 验证返回的数据结构
+    if (nameCount === 'single') {
+      if (!parsed.singleChars || !Array.isArray(parsed.singleChars)) {
+        console.error('singleChars 字段缺失或不是数组:', parsed)
+        throw new Error('AI 返回的数据格式错误：缺少 singleChars 数组')
+      }
+      if (parsed.singleChars.length === 0) {
+        console.error('singleChars 数组为空')
+        throw new Error('AI 没有返回任何候选单字')
+      }
+      console.log('singleChars 数组长度:', parsed.singleChars.length)
+    } else if (nameCount === 'double') {
+      if (!parsed.doubleChars || !Array.isArray(parsed.doubleChars)) {
+        console.error('doubleChars 字段缺失或不是数组:', parsed)
+        throw new Error('AI 返回的数据格式错误：缺少 doubleChars 数组')
+      }
+      if (parsed.doubleChars.length === 0) {
+        console.error('doubleChars 数组为空')
+        throw new Error('AI 没有返回任何候选双字')
+      }
+      console.log('doubleChars 数组长度:', parsed.doubleChars.length)
     }
 
     return parsed
@@ -243,8 +331,8 @@ async function callDeepSeek(prompt: string): Promise<DeepSeekResponse> {
 async function saveToDatabase(
   supabase: any,
   params: NamingParams,
-  bazi: BaziInfo,
-  chars: CharResult[]
+  bazi: BaziInfo | null,
+  aiResult: DeepSeekResponseNew
 ) {
   try {
     const { error } = await supabase
@@ -252,14 +340,14 @@ async function saveToDatabase(
       .insert({
         params: {
           ...params,
-          bazi: {
+          bazi: bazi ? {
             year: bazi.year,
             month: bazi.month,
             day: bazi.day,
             hour: bazi.hour
-          }
+          } : null
         },
-        result: { chars }
+        result: aiResult
       })
 
     if (error) {
@@ -281,7 +369,7 @@ serve(async (req) => {
   try {
     const params: NamingParams = await req.json()
 
-    if (!params.fatherSurname || !params.birthday || !params.gender || !params.style) {
+    if (!params.surname || !params.birthday || !params.gender || !params.style) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -294,36 +382,53 @@ serve(async (req) => {
       )
     }
 
-    console.log('计算八字...')
-    const bazi = calculateBazi(params.birthday)
+    // 根据是否使用五行八字决定是否计算八字
+    let bazi: BaziInfo | null = null
+    if (params.useWuxing === 'yes') {
+      console.log('计算八字...')
+      bazi = calculateBazi(params.birthday)
+    } else {
+      console.log('不使用五行八字')
+    }
 
     console.log('构造 Prompt...')
     const prompt = buildPrompt(params, bazi)
 
     console.log('调用 DeepSeek API...')
-    const aiResult = await callDeepSeek(prompt)
+    const aiResult = await callDeepSeek(prompt, params.nameCount)
 
-    console.log('AI 返回的 chars 数量:', aiResult.chars?.length || 0)
-    if (aiResult.chars && aiResult.chars.length > 0) {
-      console.log('第一个候选字示例:', aiResult.chars[0])
+    // 打印调试信息
+    if (params.nameCount === 'single' && aiResult.singleChars) {
+      console.log('AI 返回的 singleChars 数量:', aiResult.singleChars.length)
+      if (aiResult.singleChars.length > 0) {
+        console.log('第一个候选字示例:', aiResult.singleChars[0])
+      }
+    } else if (params.nameCount === 'double' && aiResult.doubleChars) {
+      console.log('AI 返回的 doubleChars 数量:', aiResult.doubleChars.length)
+      if (aiResult.doubleChars.length > 0) {
+        console.log('第一个候选双字示例:', aiResult.doubleChars[0])
+      }
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    await saveToDatabase(supabase, params, bazi, aiResult.chars)
+    await saveToDatabase(supabase, params, bazi, aiResult)
 
     const responseData = {
       success: true,
       data: {
-        chars: aiResult.chars,
-        bazi: {
+        singleChars: aiResult.singleChars || undefined,
+        doubleChars: aiResult.doubleChars || undefined,
+        bazi: bazi ? {
           year: bazi.year,
           month: bazi.month,
           day: bazi.day,
-          hour: bazi.hour
-        }
+          hour: bazi.hour,
+          wuxingResult: bazi.wuxingResult,
+          wuxingExplanation: bazi.wuxingExplanation
+        } : undefined
       }
     }
 

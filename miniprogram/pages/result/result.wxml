@@ -2,41 +2,52 @@
 <view class="container">
   <view class="header">
     <text class="title">起名结果</text>
-    <text class="subtitle">点击单字查看名字分析</text>
+    <text class="subtitle">点击名字查看详细分析</text>
   </view>
 
   <!-- 八字信息 -->
   <view class="bazi-card card" wx:if="{{bazi}}">
-    <view class="card-title">八字信息</view>
+    <view class="card-title">八字五行分析</view>
     <view class="bazi-content">
-      <view class="bazi-item">
-        <text class="bazi-label">年柱</text>
-        <text class="bazi-value">{{bazi.year}}</text>
+      <view class="bazi-row">
+        <view class="bazi-item">
+          <text class="bazi-label">年柱</text>
+          <text class="bazi-value">{{bazi.year}}</text>
+        </view>
+        <view class="bazi-item">
+          <text class="bazi-label">月柱</text>
+          <text class="bazi-value">{{bazi.month}}</text>
+        </view>
+        <view class="bazi-item">
+          <text class="bazi-label">日柱</text>
+          <text class="bazi-value">{{bazi.day}}</text>
+        </view>
+        <view class="bazi-item">
+          <text class="bazi-label">时柱</text>
+          <text class="bazi-value">{{bazi.hour}}</text>
+        </view>
       </view>
-      <view class="bazi-item">
-        <text class="bazi-label">月柱</text>
-        <text class="bazi-value">{{bazi.month}}</text>
+      <!-- 五行分析结果 -->
+      <view class="wuxing-result" wx:if="{{bazi.wuxingResult}}">
+        <text class="wuxing-title">{{bazi.wuxingResult}}</text>
       </view>
-      <view class="bazi-item">
-        <text class="bazi-label">日柱</text>
-        <text class="bazi-value">{{bazi.day}}</text>
-      </view>
-      <view class="bazi-item">
-        <text class="bazi-label">时柱</text>
-        <text class="bazi-value">{{bazi.hour}}</text>
+      <!-- 五行详细解释 -->
+      <view class="wuxing-explanation" wx:if="{{bazi.wuxingExplanation}}">
+        <text class="explanation-text">{{bazi.wuxingExplanation}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 候选单字网格 -->
-  <view class="chars-section">
-    <view class="card-title">候选单字</view>
+  <!-- 单字候选 -->
+  <view class="chars-section" wx:if="{{singleChars.length > 0}}">
+    <view class="card-title">单字候选（姓+1字）</view>
     <view class="chars-grid">
       <view
-        class="char-card {{expandedIndex === index ? 'expanded' : ''}}"
-        wx:for="{{chars}}"
+        class="char-card {{expandedType === 'single' && expandedIndex === index ? 'expanded' : ''}}"
+        wx:for="{{singleChars}}"
         wx:key="char"
         data-index="{{index}}"
+        data-type="single"
         bindtap="onCharTap"
       >
         <view class="char-main">
@@ -46,7 +57,37 @@
         </view>
 
         <!-- 展开的名字分析 -->
-        <view class="char-detail" wx:if="{{expandedIndex === index}}">
+        <view class="char-detail" wx:if="{{expandedType === 'single' && expandedIndex === index}}">
+          <view class="detail-name">
+            <text class="full-name">{{item.fullName}}</text>
+            <text class="full-pinyin">{{item.fullPinyin}}</text>
+          </view>
+          <view class="detail-analysis">{{item.analysis}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 双字候选 -->
+  <view class="chars-section" wx:if="{{doubleChars.length > 0}}">
+    <view class="card-title">双字候选（姓+2字）</view>
+    <view class="chars-grid double-grid">
+      <view
+        class="char-card double-card {{expandedType === 'double' && expandedIndex === index ? 'expanded' : ''}}"
+        wx:for="{{doubleChars}}"
+        wx:key="char"
+        data-index="{{index}}"
+        data-type="double"
+        bindtap="onCharTap"
+      >
+        <view class="char-main">
+          <text class="char-text double-text">{{item.char}}</text>
+          <text class="char-pinyin">{{item.pinyin}}</text>
+          <view class="char-wuxing">{{item.wuxing}}</view>
+        </view>
+
+        <!-- 展开的名字分析 -->
+        <view class="char-detail" wx:if="{{expandedType === 'double' && expandedIndex === index}}">
           <view class="detail-name">
             <text class="full-name">{{item.fullName}}</text>
             <text class="full-pinyin">{{item.fullPinyin}}</text>

@@ -48,6 +48,12 @@
 
 .bazi-content {
   display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.bazi-row {
+  display: flex;
   justify-content: space-between;
   gap: 20rpx;
 }
@@ -69,6 +75,36 @@
   font-size: 28rpx;
   color: #333;
   font-weight: 500;
+}
+
+/* 五行分析结果 */
+.wuxing-result {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12rpx;
+  text-align: center;
+}
+
+.wuxing-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* 五行详细解释 */
+.wuxing-explanation {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #667eea;
+}
+
+.explanation-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
 }
 
 /* 候选单字区域 */
@@ -200,4 +236,27 @@
 
 .btn-primary:active {
   opacity: 0.9;
+}
+
+/* 双字网格 */
+.double-grid {
+  gap: 20rpx;
+}
+
+.double-card {
+  width: calc(50% - 10rpx);
+}
+
+.double-card.expanded {
+  width: 100%;
+}
+
+.double-text {
+  font-size: 48rpx;
+  letter-spacing: 4rpx;
+}
+
+/* 候选区域间距 */
+.chars-section {
+  margin-bottom: 30rpx;
 }

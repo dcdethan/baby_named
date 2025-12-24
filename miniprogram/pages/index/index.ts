@@ -1,27 +1,46 @@
 // pages/index/index.ts
 import { invokeEdgeFunction } from '../../utils/supabase'
 import { EDGE_FUNCTIONS } from '../../config/supabase'
-import { NamingParams, Gender, NamingStyle, NamingResponse } from '../../types/index'
+import { NamingParams, Gender, NamingStyle, NamingResponse, UseWuxing, NameCount } from '../../types/index'
 
 interface FormData {
-  fatherSurname: string
-  motherSurname: string
+  surname: string
   birthday: string
   gender: Gender
   style: NamingStyle
+  useWuxing: UseWuxing
+  nameCount: NameCount
+}
+
+interface OptionItem {
+  label: string
+  value: string
 }
 
 Page({
   data: {
     formData: {
-      fatherSurname: '',
-      motherSurname: '',
+      surname: '',
       birthday: '',
       gender: 'male',
-      style: 'shijing'
+      style: 'shijing',
+      useWuxing: 'yes',
+      nameCount: 'single'
     } as FormData,
     loading: false,
-    today: ''
+    today: '',
+    // 五行八字选项
+    wuxingOptions: [
+      { label: '使用五行八字', value: 'yes' },
+      { label: '不用五行八字', value: 'no' }
+    ] as OptionItem[],
+    wuxingIndex: 0,
+    // 名字字数选项
+    nameCountOptions: [
+      { label: '单字名（姓+1字）', value: 'single' },
+      { label: '双字名（姓+2字）', value: 'double' }
+    ] as OptionItem[],
+    nameCountIndex: 0
   },
 
   onLoad() {
@@ -36,30 +55,16 @@ Page({
   },
 
   /**
-   * 父姓输入
+   * 姓氏输入
    */
-  onFatherSurnameInput(e: any) {
+  onSurnameInput(e: any) {
     let value = e.detail.value
     // 限制最多输入2个字符
     if (value.length > 2) {
       value = value.slice(0, 2)
     }
     this.setData({
-      'formData.fatherSurname': value
-    })
-  },
-
-  /**
-   * 母姓输入
-   */
-  onMotherSurnameInput(e: any) {
-    let value = e.detail.value
-    // 限制最多输入2个字符
-    if (value.length > 2) {
-      value = value.slice(0, 2)
-    }
-    this.setData({
-      'formData.motherSurname': value
+      'formData.surname': value
     })
   },
 
@@ -82,6 +87,28 @@ Page({
   },
 
   /**
+   * 五行八字选择
+   */
+  onWuxingChange(e: any) {
+    const index = parseInt(e.detail.value)
+    this.setData({
+      wuxingIndex: index,
+      'formData.useWuxing': this.data.wuxingOptions[index].value as UseWuxing
+    })
+  },
+
+  /**
+   * 名字字数选择
+   */
+  onNameCountChange(e: any) {
+    const index = parseInt(e.detail.value)
+    this.setData({
+      nameCountIndex: index,
+      'formData.nameCount': this.data.nameCountOptions[index].value as NameCount
+    })
+  },
+
+  /**
    * 风格选择
    */
   onStyleChange(e: any) {
@@ -94,11 +121,11 @@ Page({
    * 表单验证
    */
   validateForm(): boolean {
-    const { fatherSurname, birthday } = this.data.formData
+    const { surname, birthday } = this.data.formData
 
-    if (!fatherSurname.trim()) {
+    if (!surname.trim()) {
       wx.showToast({
-        title: '请输入父亲姓氏',
+        title: '请输入姓氏',
         icon: 'none'
       })
       return false
@@ -127,11 +154,12 @@ Page({
 
     try {
       const params: NamingParams = {
-        fatherSurname: this.data.formData.fatherSurname.trim(),
-        motherSurname: this.data.formData.motherSurname.trim() || undefined,
+        surname: this.data.formData.surname.trim(),
         birthday: this.data.formData.birthday,
         gender: this.data.formData.gender,
-        style: this.data.formData.style
+        style: this.data.formData.style,
+        useWuxing: this.data.formData.useWuxing,
+        nameCount: this.data.formData.nameCount
       }
 
       // 调用 Supabase Edge Function
@@ -148,7 +176,8 @@ Page({
       }
 
       console.log('data.data:', data.data)
-      console.log('data.data.chars 长度:', data.data?.chars?.length || 0)
+      console.log('singleChars 长度:', data.data?.singleChars?.length || 0)
+      console.log('doubleChars 长度:', data.data?.doubleChars?.length || 0)
 
       // 跳转到结果页面
       const resultData = JSON.stringify(data.data)

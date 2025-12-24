@@ -1,21 +1,19 @@
 // pages/result/result.ts
-import { CharResult } from '../../types/index'
+import { CharResult, BaziInfo } from '../../types/index'
 
 interface ResultData {
-  chars: CharResult[]
-  bazi?: {
-    year: string
-    month: string
-    day: string
-    hour: string
-  }
+  singleChars?: CharResult[]
+  doubleChars?: CharResult[]
+  bazi?: BaziInfo
 }
 
 Page({
   data: {
-    chars: [] as CharResult[],
-    bazi: null as ResultData['bazi'] | null,
-    expandedIndex: -1  // 当前展开的单字索引，-1表示都没展开
+    singleChars: [] as CharResult[],
+    doubleChars: [] as CharResult[],
+    bazi: null as BaziInfo | null,
+    expandedIndex: -1,  // 当前展开的索引，-1表示都没展开
+    expandedType: ''    // 展开的类型：'single' 或 'double'
   },
 
   onLoad(options: any) {
@@ -28,12 +26,13 @@ Page({
 
         const resultData: ResultData = JSON.parse(decodedData)
         console.log('解析后的 resultData:', resultData)
-        console.log('chars 数组:', resultData.chars)
-        console.log('chars 数组长度:', resultData.chars?.length || 0)
+        console.log('singleChars 数组长度:', resultData.singleChars?.length || 0)
+        console.log('doubleChars 数组长度:', resultData.doubleChars?.length || 0)
         console.log('bazi 信息:', resultData.bazi)
 
         this.setData({
-          chars: resultData.chars || [],
+          singleChars: resultData.singleChars || [],
+          doubleChars: resultData.doubleChars || [],
           bazi: resultData.bazi || null
         })
 
@@ -61,13 +60,24 @@ Page({
   },
 
   /**
-   * 点击单字卡片
+   * 点击名字卡片
    */
   onCharTap(e: any) {
     const index = e.currentTarget.dataset.index
-    this.setData({
-      expandedIndex: this.data.expandedIndex === index ? -1 : index
-    })
+    const type = e.currentTarget.dataset.type
+
+    // 如果点击的是同一个，则收起；否则展开新的
+    if (this.data.expandedType === type && this.data.expandedIndex === index) {
+      this.setData({
+        expandedIndex: -1,
+        expandedType: ''
+      })
+    } else {
+      this.setData({
+        expandedIndex: index,
+        expandedType: type
+      })
+    }
   },
 
   /**
@@ -97,19 +107,34 @@ Page({
    * 生成分享文本
    */
   generateShareText(): string {
-    const { chars, bazi } = this.data
+    const { singleChars, doubleChars, bazi } = this.data
     let text = '【AI智能起名结果】\n\n'
 
     if (bazi) {
-      text += `八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}\n\n`
+      text += `八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}\n`
+      if (bazi.wuxingResult) {
+        text += `五行：${bazi.wuxingResult}\n`
+      }
+      text += '\n'
     }
 
-    text += '候选名字：\n'
-    chars.forEach((char, index) => {
-      text += `\n${index + 1}. ${char.fullName}（${char.fullPinyin}）\n`
-      text += `   五行：${char.wuxing}\n`
-      text += `   分析：${char.analysis}\n`
-    })
+    if (singleChars.length > 0) {
+      text += '单字候选：\n'
+      singleChars.forEach((char, index) => {
+        text += `\n${index + 1}. ${char.fullName}（${char.fullPinyin}）\n`
+        text += `   五行：${char.wuxing}\n`
+        text += `   分析：${char.analysis}\n`
+      })
+    }
+
+    if (doubleChars.length > 0) {
+      text += '\n双字候选：\n'
+      doubleChars.forEach((char, index) => {
+        text += `\n${index + 1}. ${char.fullName}（${char.fullPinyin}）\n`
+        text += `   五行：${char.wuxing}\n`
+        text += `   分析：${char.analysis}\n`
+      })
+    }
 
     return text
   },
