@@ -1,5 +1,7 @@
 // pages/result/result.ts
-import { CharResult, BaziInfo } from '../../types/index'
+import { CharResult, BaziInfo, NamingParams, ExpandResponse } from '../../types/index'
+import { invokeEdgeFunction } from '../../utils/supabase'
+import { EDGE_FUNCTIONS } from '../../config/supabase'
 
 interface ResultData {
   singleChars?: CharResult[]
@@ -13,7 +15,10 @@ Page({
     doubleChars: [] as CharResult[],
     bazi: null as BaziInfo | null,
     expandedIndex: -1,  // 当前展开的索引，-1表示都没展开
-    expandedType: ''    // 展开的类型：'single' 或 'double'
+    expandedType: '',   // 展开的类型：'single' 或 'double'
+    requestParams: null as NamingParams | null,  // 原始请求参数
+    expandedChars: {} as { [key: number]: CharResult[] },  // 每个单字的扩展三字名
+    loadingExpand: false  // 扩展加载状态
   },
 
   onLoad(options: any) {
@@ -30,10 +35,19 @@ Page({
         console.log('doubleChars 数组长度:', resultData.doubleChars?.length || 0)
         console.log('bazi 信息:', resultData.bazi)
 
+        // 解析原始请求参数
+        let requestParams: NamingParams | null = null
+        if (options.params) {
+          const decodedParams = decodeURIComponent(options.params)
+          requestParams = JSON.parse(decodedParams)
+          console.log('原始请求参数:', requestParams)
+        }
+
         this.setData({
           singleChars: resultData.singleChars || [],
           doubleChars: resultData.doubleChars || [],
-          bazi: resultData.bazi || null
+          bazi: resultData.bazi || null,
+          requestParams: requestParams
         })
 
         console.log('页面 data 设置后:', this.data)
@@ -62,7 +76,7 @@ Page({
   /**
    * 点击名字卡片
    */
-  onCharTap(e: any) {
+  async onCharTap(e: any) {
     const index = e.currentTarget.dataset.index
     const type = e.currentTarget.dataset.type
 
@@ -77,6 +91,55 @@ Page({
         expandedIndex: index,
         expandedType: type
       })
+
+      // 如果是单字且还没有加载扩展数据，则调用API获取
+      if (type === 'single' && !this.data.expandedChars[index] && this.data.requestParams) {
+        await this.loadExpandedNames(index)
+      }
+    }
+  },
+
+  /**
+   * 加载单字的三字名扩展
+   */
+  async loadExpandedNames(index: number) {
+    const char = this.data.singleChars[index]
+    if (!char || !this.data.requestParams) return
+
+    this.setData({ loadingExpand: true })
+
+    try {
+      const expandParams: NamingParams = {
+        ...this.data.requestParams,
+        expandChar: char.char
+      }
+
+      console.log('调用扩展API，参数:', expandParams)
+
+      const { data, error } = await invokeEdgeFunction<ExpandResponse>(
+        EDGE_FUNCTIONS.namingExpert,
+        expandParams
+      )
+
+      if (error || !data || !data.success) {
+        throw new Error(data?.error || '获取三字名扩展失败')
+      }
+
+      console.log('扩展API返回:', data.data)
+
+      // 保存扩展数据
+      this.setData({
+        [`expandedChars.${index}`]: data.data?.doubleChars || []
+      })
+
+    } catch (err: any) {
+      console.error('获取三字名扩展失败:', err)
+      wx.showToast({
+        title: err.message || '获取扩展失败',
+        icon: 'none'
+      })
+    } finally {
+      this.setData({ loadingExpand: false })
     }
   },
 

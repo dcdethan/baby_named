@@ -40,7 +40,7 @@
 
   <!-- 单字候选 -->
   <view class="chars-section" wx:if="{{singleChars.length > 0}}">
-    <view class="card-title">单字候选（姓+1字）</view>
+    <view class="card-title">点击下面字查看详情</view>
     <view class="chars-grid">
       <view
         class="char-card {{expandedType === 'single' && expandedIndex === index ? 'expanded' : ''}}"
@@ -53,7 +53,7 @@
         <view class="char-main">
           <text class="char-text">{{item.char}}</text>
           <text class="char-pinyin">{{item.pinyin}}</text>
-          <view class="char-wuxing">{{item.wuxing}}</view>
+          <view class="char-wuxing" wx:if="{{item.wuxing}}">{{item.wuxing}}</view>
         </view>
 
         <!-- 展开的名字分析 -->
@@ -63,6 +63,24 @@
             <text class="full-pinyin">{{item.fullPinyin}}</text>
           </view>
           <view class="detail-analysis">{{item.analysis}}</view>
+
+          <!-- 三字名扩展 -->
+          <view class="expand-section">
+            <view class="expand-title">基于此字的三字名推荐</view>
+            <view class="expand-loading" wx:if="{{loadingExpand && !expandedChars[index]}}">
+              <text>正在生成三字名...</text>
+            </view>
+            <view class="expand-names" wx:elif="{{expandedChars[index] && expandedChars[index].length > 0}}">
+              <view class="expand-item" wx:for="{{expandedChars[index]}}" wx:key="char" wx:for-item="expandItem">
+                <view class="expand-name-row">
+                  <text class="expand-name">{{expandItem.fullName}}</text>
+                  <text class="expand-pinyin">{{expandItem.fullPinyin}}</text>
+                  <view class="expand-wuxing">{{expandItem.wuxing}}</view>
+                </view>
+                <view class="expand-analysis">{{expandItem.analysis}}</view>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
     </view>
@@ -84,6 +102,7 @@
           <text class="char-text double-text">{{item.char}}</text>
           <text class="char-pinyin">{{item.pinyin}}</text>
           <view class="char-wuxing">{{item.wuxing}}</view>
+          <text class="char-hint" wx:if="{{expandedType !== 'double' || expandedIndex !== index}}">点击查看详情</text>
         </view>
 
         <!-- 展开的名字分析 -->

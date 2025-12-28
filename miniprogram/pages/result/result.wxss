@@ -172,6 +172,12 @@
   color: #fff;
 }
 
+.char-hint {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
 /* 展开的详情 */
 .char-detail {
   margin-top: 24rpx;
@@ -259,4 +265,71 @@
 /* 候选区域间距 */
 .chars-section {
   margin-bottom: 30rpx;
+}
+
+/* 三字名扩展区域 */
+.expand-section {
+  margin-top: 32rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid rgba(255,255,255,0.3);
+}
+
+.expand-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.expand-loading {
+  text-align: center;
+  padding: 40rpx 0;
+  color: rgba(255,255,255,0.8);
+  font-size: 26rpx;
+}
+
+.expand-names {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.expand-item {
+  background: rgba(255,255,255,0.15);
+  border-radius: 12rpx;
+  padding: 20rpx;
+}
+
+.expand-name-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+  flex-wrap: wrap;
+}
+
+.expand-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.expand-pinyin {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.8);
+}
+
+.expand-wuxing {
+  display: inline-block;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+}
+
+.expand-analysis {
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.6;
 }

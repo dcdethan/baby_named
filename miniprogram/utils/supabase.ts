@@ -9,6 +9,9 @@ export async function invokeEdgeFunction<T = any>(
   functionName: string,
   params: any
 ): Promise<{ data: T | null; error: any }> {
+  console.log('调用 Edge Function:', functionName)
+  console.log('请求参数:', JSON.stringify(params))
+
   return new Promise((resolve) => {
     wx.request({
       url: `${SUPABASE_CONFIG.url}/functions/v1/${functionName}`,
@@ -20,11 +23,13 @@ export async function invokeEdgeFunction<T = any>(
       },
       data: params,
       success: (res) => {
-        console.log('Edge Function 响应:', res)
+        console.log('Edge Function 响应状态码:', res.statusCode)
+        console.log('Edge Function 响应数据:', JSON.stringify(res.data))
         if (res.statusCode === 200) {
           resolve({ data: res.data as T, error: null })
         } else {
-          console.error('Edge Function 调用失败:', res)
+          console.error('Edge Function 调用失败 - 状态码:', res.statusCode)
+          console.error('Edge Function 调用失败 - 响应体:', JSON.stringify(res.data))
           resolve({
             data: null,
             error: {

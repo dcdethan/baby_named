@@ -16,11 +16,6 @@ export type Gender = 'male' | 'female'
 export type UseWuxing = 'yes' | 'no'
 
 /**
- * 名字字数类型
- */
-export type NameCount = 'single' | 'double'
-
-/**
  * 起名请求参数
  */
 export interface NamingParams {
@@ -29,7 +24,7 @@ export interface NamingParams {
   gender: Gender            // 性别
   style: NamingStyle        // 起名风格
   useWuxing: UseWuxing      // 是否使用五行八字
-  nameCount: NameCount      // 名字字数
+  expandChar?: string       // 可选：要扩展的单字（用于获取三字名）
 }
 
 /**
@@ -63,8 +58,19 @@ export interface NamingResponse {
   success: boolean
   data?: {
     singleChars?: CharResult[]  // 单字候选
-    doubleChars?: CharResult[]  // 双字候选
+    doubleChars?: CharResult[]  // 双字候选（三字名扩展）
     bazi?: BaziInfo
+  }
+  error?: string
+}
+
+/**
+ * 扩展响应结果
+ */
+export interface ExpandResponse {
+  success: boolean
+  data?: {
+    doubleChars: CharResult[]  // 双字候选（三字名）
   }
   error?: string
 }

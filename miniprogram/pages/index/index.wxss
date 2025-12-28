@@ -130,6 +130,21 @@ picker {
   color: #888;
 }
 
+/* Switch 样式 */
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.switch-label {
+  font-size: 30rpx;
+  color: #333;
+}
+
 .submit-container {
   padding: 40rpx 30rpx 0;
 }
