@@ -1,0 +1,82 @@
+<!-- pages/favorites/favorites.wxml -->
+<view class="favorites-container">
+  <!-- 标签栏 -->
+  <view class="tab-bar">
+    <view
+      class="tab-item {{activeTab === 'naming' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="naming"
+    >
+      <text>起名收藏</text>
+      <text class="tab-count">({{namingFavorites.length}})</text>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'analysis' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="analysis"
+    >
+      <text>分析收藏</text>
+      <text class="tab-count">({{analysisFavorites.length}})</text>
+    </view>
+  </view>
+
+  <!-- 起名收藏列表 -->
+  <view class="list-section" wx:if="{{activeTab === 'naming'}}">
+    <view class="favorite-card" wx:for="{{namingFavorites}}" wx:key="id">
+      <view class="card-content">
+        <text class="card-name">{{item.content.fullName}}</text>
+        <text class="card-pinyin">{{item.content.pinyin}}</text>
+        <text class="card-score" wx:if="{{item.content.score}}">{{item.content.score}}分</text>
+      </view>
+      <view class="card-actions">
+        <view
+          class="delete-btn"
+          bindtap="removeFavorite"
+          data-id="{{item.id}}"
+          data-type="naming"
+        >
+          <text>删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{namingFavorites.length === 0 && !loading}}">
+      <text class="empty-icon">☆</text>
+      <text class="empty-text">暂无起名收藏</text>
+      <text class="empty-tip">在起名结果中点击星标即可收藏</text>
+    </view>
+  </view>
+
+  <!-- 分析收藏列表 -->
+  <view class="list-section" wx:if="{{activeTab === 'analysis'}}">
+    <view class="favorite-card" wx:for="{{analysisFavorites}}" wx:key="id">
+      <view class="card-content">
+        <text class="card-name">{{item.content.fullName}}</text>
+        <text class="card-detail" wx:if="{{item.content.result.meaning}}">
+          {{item.content.result.meaning.interpretation}}
+        </text>
+      </view>
+      <view class="card-actions">
+        <view
+          class="delete-btn"
+          bindtap="removeFavorite"
+          data-id="{{item.id}}"
+          data-type="analysis"
+        >
+          <text>删除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{analysisFavorites.length === 0 && !loading}}">
+      <text class="empty-icon">☆</text>
+      <text class="empty-text">暂无分析收藏</text>
+      <text class="empty-tip">在名字分析结果中点击收藏即可保存</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

@@ -13,10 +13,18 @@ const corsHeaders = {
 // 类型定义
 interface NamingParams {
   surname: string
-  birthday: string
+  birthday?: string  // 可选：阳历生日
+  birthHour?: number // 可选：出生时辰（0-23）
   gender: 'male' | 'female'
-  style: 'shijing' | 'chuci' | 'modern'
-  useWuxing: 'yes' | 'no'
+  style: 'classical' | 'modern' | 'poetic' | 'custom'  // 古典、现代、诗意、自定义
+  // 自定义选项（style === 'custom' 时使用）
+  customOptions?: {
+    nameType?: 'single' | 'double'   // 单字/双字
+    disabledChars?: string[]         // 禁用字
+    preferredChars?: string[]        // 偏好字
+    strokeCount?: number             // 笔画数
+  }
+  openid?: string    // 用户标识
   expandChar?: string  // 可选：要扩展的单字
 }
 
@@ -74,14 +82,15 @@ const wuxingLackExplanations: { [key: string]: string } = {
 }
 
 /**
- * 计算八字五行（简化版本）
+ * 计算八字五行（支持时辰）
  */
-function calculateBazi(birthday: string): BaziInfo {
+function calculateBazi(birthday: string, birthHour?: number): BaziInfo {
   try {
     const date = new Date(birthday)
     const year = date.getFullYear()
     const month = date.getMonth() + 1
     const day = date.getDate()
+    const hour = birthHour ?? 12 // 默认中午12点
 
     const gan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
     const zhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
@@ -108,7 +117,11 @@ function calculateBazi(birthday: string): BaziInfo {
     const dayZhiIndex = Math.floor((date.getTime() / 86400000)) % 12
     const dayGanZhi = gan[dayGanIndex] + zhi[dayZhiIndex]
 
-    const hourGanZhi = '甲子'
+    // 根据小时计算时辰（子时23-1点，丑时1-3点，依此类推）
+    const hourZhiIndex = Math.floor(((hour + 1) % 24) / 2)
+    // 时柱天干根据日干推算
+    const hourGanIndex = (dayGanIndex * 2 + hourZhiIndex) % 10
+    const hourGanZhi = gan[hourGanIndex] + zhi[hourZhiIndex]
 
     const wuxing: string[] = [
       ganWuxing[gan[yearGanIndex]],
@@ -116,7 +129,9 @@ function calculateBazi(birthday: string): BaziInfo {
       ganWuxing[gan[monthGanIndex]],
       zhiWuxing[zhi[monthZhiIndex]],
       ganWuxing[gan[dayGanIndex]],
-      zhiWuxing[zhi[dayZhiIndex]]
+      zhiWuxing[zhi[dayZhiIndex]],
+      ganWuxing[gan[hourGanIndex]],
+      zhiWuxing[zhi[hourZhiIndex]]
     ]
 
     const wuxingCount: { [key: string]: number } = {}
@@ -162,8 +177,30 @@ function calculateBazi(birthday: string): BaziInfo {
   }
 }
 
-// AI 响应接口 - 单字名
+// 名字方案中的字信息
+interface NameChar {
+  char: string
+  pinyin: string
+  wuxing: string
+  strokes: number
+}
+
+// 单个名字方案
+interface NameResult {
+  fullName: string
+  pinyin: string
+  chars: NameChar[]
+  analysis: string
+  score: number
+}
+
+// AI 响应接口 - 新版（3个完整方案）
 interface AIResponse {
+  names: NameResult[]
+}
+
+// AI 响应接口 - 旧版兼容（单字名）
+interface AIResponseLegacy {
   singleChars: CharResult[]
 }
 
@@ -173,17 +210,19 @@ interface AIExpandResponse {
 }
 
 /**
- * 构造 AI Prompt - 生成候选名字
+ * 构造 AI Prompt - 生成候选名字（3个完整姓名方案）
  */
 function buildPrompt(params: NamingParams, bazi: BaziInfo | null): string {
-  const { surname, gender, style, useWuxing } = params
+  const { surname, gender, style, customOptions } = params
+  const hasBirthday = !!params.birthday
 
   const genderText = gender === 'male' ? '男孩' : '女孩'
 
   const styleMap: { [key: string]: string } = {
-    shijing: `诗经风格。名字源自《诗经》，体现草木风物与人文美德的典雅意境，用字古典而不生僻，整体气质温润端庄，寓意侧重品德修养与生活安宁。`,
-    chuci: `楚辞风格。名字源自《楚辞》（以《离骚》《九歌》等为代表），强调香草美人、天地遨游等浪漫意象，气质飘逸深邃，用字可稍具独特性，寓意高远，突出理想追求与精神探索。`,
-    modern: `现代风格。名字源自现代汉语审美词汇，融合自然意象或积极状态，整体简洁明快、音韵悦耳、易读易写，寓意乐观向上，突出智慧、快乐与成长潜力。`
+    classical: `古典风格。名字源自《诗经》《楚辞》等古典文学，体现草木风物与人文美德的典雅意境，气质温润端庄或飘逸深邃，用字古典而不生僻，寓意侧重品德修养与理想追求。`,
+    modern: `现代风格。名字源自现代汉语审美词汇，融合自然意象或积极状态，整体简洁明快、音韵悦耳、易读易写，寓意乐观向上，突出智慧、快乐与成长潜力。`,
+    poetic: `诗意风格。名字富有诗意和意境美，可融合古典与现代元素，强调意境的营造和情感的表达，用字优美灵动，整体给人以美的享受和想象空间。`,
+    custom: `自定义风格。根据用户偏好进行个性化起名。`
   }
 
   // 根据性别给出的额外提示
@@ -191,28 +230,55 @@ function buildPrompt(params: NamingParams, bazi: BaziInfo | null): string {
     ? '可使用中性词，但不得使用明显女性化的名字。'
     : '可使用中性词，但不得使用明显男性化的名字。'
 
-  // 五行相关提示
+  // 五行相关提示（仅在有生日时启用）
   let wuxingHint = ''
-  if (useWuxing === 'yes' && bazi) {
+  if (hasBirthday && bazi) {
     wuxingHint = `
 **八字五行信息**
 - 八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}
 - 五行分析：${bazi.wuxingResult}
 - 五行详解：${bazi.wuxingExplanation}
-- 起名建议：选字时请注意补足缺失的五行，或平衡过旺的五行。推荐的单字必须结合五行属性，帮助孩子补足先天不足。`
+- 起名建议：选字时请注意补足缺失的五行，或平衡过旺的五行。推荐的名字必须结合五行属性，帮助孩子补足先天不足。`
+  }
+
+  // 自定义选项提示
+  let customHint = ''
+  if (style === 'custom' && customOptions) {
+    const hints: string[] = []
+    if (customOptions.nameType === 'single') {
+      hints.push('- 名字类型：单字名（姓+1字）')
+    } else if (customOptions.nameType === 'double') {
+      hints.push('- 名字类型：双字名（姓+2字）')
+    }
+    if (customOptions.disabledChars && customOptions.disabledChars.length > 0) {
+      hints.push(`- 禁用字：${customOptions.disabledChars.join('、')}（不可使用这些字）`)
+    }
+    if (customOptions.preferredChars && customOptions.preferredChars.length > 0) {
+      hints.push(`- 偏好字：${customOptions.preferredChars.join('、')}（优先考虑使用这些字）`)
+    }
+    if (customOptions.strokeCount) {
+      hints.push(`- 笔画数：名字部分总笔画数约为 ${customOptions.strokeCount} 画`)
+    }
+    if (hints.length > 0) {
+      customHint = `\n**自定义要求**\n${hints.join('\n')}`
+    }
   }
 
   // 网红字列表
   const popularChars = '梓、轩、辰、汐、沐、涵、熙、睿、宸、昊、浩、煜、泽、瑞、萱、琪'
 
+  // 确定名字类型
+  const nameType = customOptions?.nameType === 'single' ? '单字' : '双字'
+  const nameDesc = customOptions?.nameType === 'single' ? '（姓+1字）' : '（姓+2字）'
+
   return `你是一位精通中国传统文化和姓名学的起名专家。
 
-请推荐6个候选单字，每个字将与姓氏组成两字名（姓+字）。
+请推荐3个完整的${nameType}名方案${nameDesc}。
 
 **基本信息**
 - 姓氏：${surname}
 - 性别：${genderText}
-${wuxingHint}
+${wuxingHint}${customHint}
 
 **核心要求**
 
@@ -231,37 +297,49 @@ ${wuxingHint}
 6. **性别特征**：${genderHint}
 
 7. **字音和谐**：与姓氏${surname}搭配时音韵流畅，避免谐音不佳。
-${useWuxing === 'yes' ? '\n8. **五行考虑**：推荐的字需要结合上述五行分析，帮助补足五行不足或平衡五行。' : ''}
+${hasBirthday ? '\n8. **五行考虑**：推荐的名字需要结合上述五行分析，帮助补足五行不足或平衡五行。' : ''}
 
 **输出格式（严格 JSON）**
 {
-  "singleChars": [
+  "names": [
     {
-      "char": "瑞",
-      "pinyin": "ruì",
-      "wuxing": "金",
-      "fullName": "${surname}瑞",
-      "fullPinyin": "xìng ruì",
-      "analysis": "精准对应表达指向（明确说明是描述人还是描绘景），清晰阐释名字的具体含义和内涵，包括字义解释、文化内涵、寓意期许等，杜绝空洞表述。注意：不要在分析中提及五行属性。（80-120字）"
+      "fullName": "${surname}XX",
+      "pinyin": "xìng xx",
+      "chars": [
+        {
+          "char": "X",
+          "pinyin": "x",
+          "wuxing": "金",
+          "strokes": 8
+        }
+      ],
+      "analysis": "精准对应表达指向（明确说明是描述人还是描绘景），清晰阐释名字的具体含义和内涵，包括字义解释、文化内涵、寓意期许等，杜绝空洞表述。（100-150字）",
+      "score": 95
     }
   ]
 }
 
-请直接输出 JSON，不要有任何其他文字。`
+注意：
+- names 数组必须包含恰好 3 个方案
+- score 为综合评分（0-100），考虑音韵、寓意、${hasBirthday ? '五行匹配度、' : ''}整体协调性
+- chars 数组包含名字中每个字的详细信息
+- 请直接输出 JSON，不要有任何其他文字。`
 }
 
 /**
  * 构造 AI Prompt - 生成单字的三字名扩展
  */
 function buildExpandPrompt(params: NamingParams, bazi: BaziInfo | null, expandChar: string): string {
-  const { surname, gender, style, useWuxing } = params
+  const { surname, gender, style } = params
+  const hasBirthday = !!params.birthday
 
   const genderText = gender === 'male' ? '男孩' : '女孩'
 
   const styleMap: { [key: string]: string } = {
-    shijing: `诗经风格。名字源自《诗经》，体现草木风物与人文美德的典雅意境，用字古典而不生僻，整体气质温润端庄。`,
-    chuci: `楚辞风格。名字源自《楚辞》（以《离骚》《九歌》等为代表），强调香草美人、天地遨游等浪漫意象，气质飘逸深邃。`,
-    modern: `现代风格。名字源自现代汉语审美词汇，融合自然意象或积极状态，整体简洁明快、音韵悦耳、易读易写。`
+    classical: `古典风格。名字源自《诗经》《楚辞》等古典文学，体现草木风物与人文美德的典雅意境，气质温润端庄或飘逸深邃。`,
+    modern: `现代风格。名字源自现代汉语审美词汇，融合自然意象或积极状态，整体简洁明快、音韵悦耳、易读易写。`,
+    poetic: `诗意风格。名字富有诗意和意境美，可融合古典与现代元素，强调意境的营造和情感的表达。`,
+    custom: `自定义风格。根据用户偏好进行个性化起名。`
   }
 
   const genderHint = gender === 'male'
@@ -269,7 +347,7 @@ function buildExpandPrompt(params: NamingParams, bazi: BaziInfo | null, expandCh
     : '可使用中性词，但不得使用明显男性化的名字。'
 
   let wuxingHint = ''
-  if (useWuxing === 'yes' && bazi) {
+  if (hasBirthday && bazi) {
     wuxingHint = `
 **八字五行信息**
 - 八字：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}
@@ -305,12 +383,12 @@ ${wuxingHint}
 
 5. **杜绝生僻字**：避免难认、拗口的汉字。
 
-6. **风格要求**：${styleMap[style]}
+6. **风格要求**：${styleMap[style] || styleMap.poetic}
 
 7. **性别特征**：${genderHint}
 
 8. **字音和谐**：与姓氏${surname}搭配时音韵流畅，避免谐音不佳。
-${useWuxing === 'yes' ? '\n9. **五行考虑**：推荐的字需要结合上述五行分析，帮助补足五行不足或平衡五行。' : ''}
+${hasBirthday ? '\n9. **五行考虑**：推荐的字需要结合上述五行分析，帮助补足五行不足或平衡五行。' : ''}
 
 **输出格式（严格 JSON）**
 {
@@ -330,48 +408,40 @@ ${useWuxing === 'yes' ? '\n9. **五行考虑**：推荐的字需要结合上述�
 }
 
 /**
- * 调用豆包 API - 获取单字名
+ * 调用 DeepSeek API - 获取姓名方案
  */
-async function callDoubao(prompt: string): Promise<AIResponse> {
-  const apiKey = Deno.env.get('ARK_API_KEY')
-  console.log('ARK_API_KEY 是否存在:', !!apiKey)
-  console.log('ARK_API_KEY 前10位:', apiKey ? apiKey.substring(0, 10) + '...' : 'null')
+async function callDeepSeek(prompt: string): Promise<AIResponse> {
+  const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
+  console.log('DEEPSEEK_API_KEY 是否存在:', !!apiKey)
 
   if (!apiKey) {
-    throw new Error('ARK_API_KEY 未配置')
+    throw new Error('DEEPSEEK_API_KEY 未配置')
   }
 
-  console.log('准备调用豆包 API...')
-  console.log('API URL: https://ark.cn-beijing.volces.com/api/v3/chat/completions')
+  console.log('准备调用 DeepSeek API...')
 
-  const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'doubao-seed-1-6-flash-250828',
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: prompt
-            }
-          ]
+          content: prompt
         }
       ],
       temperature: 0.8,
-      max_tokens: 2000,
-      thinking: { type: 'disabled' }
+      max_tokens: 2000
     })
   })
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('豆包 API 调用失败')
+    console.error('DeepSeek API 调用失败')
     console.error('状态码:', response.status)
     console.error('状态文本:', response.statusText)
     console.error('错误详情:', error)
@@ -381,7 +451,7 @@ async function callDoubao(prompt: string): Promise<AIResponse> {
   const data = await response.json()
   let content = data.choices[0]?.message?.content
 
-  console.log('豆包 原始返回:', content)
+  console.log('DeepSeek 原始返回:', content)
 
   if (!content) {
     throw new Error('AI 返回内容为空')
@@ -407,15 +477,15 @@ async function callDoubao(prompt: string): Promise<AIResponse> {
     console.log('解析后的数据:', parsed)
 
     // 验证返回的数据结构
-    if (!parsed.singleChars || !Array.isArray(parsed.singleChars)) {
-      console.error('singleChars 字段缺失或不是数组:', parsed)
-      throw new Error('AI 返回的数据格式错误：缺少 singleChars 数组')
+    if (!parsed.names || !Array.isArray(parsed.names)) {
+      console.error('names 字段缺失或不是数组:', parsed)
+      throw new Error('AI 返回的数据格式错误：缺少 names 数组')
     }
-    if (parsed.singleChars.length === 0) {
-      console.error('singleChars 数组为空')
-      throw new Error('AI 没有返回任何候选单字')
+    if (parsed.names.length === 0) {
+      console.error('names 数组为空')
+      throw new Error('AI 没有返回任何姓名方案')
     }
-    console.log('singleChars 数组长度:', parsed.singleChars.length)
+    console.log('names 数组长度:', parsed.names.length)
 
     return parsed
   } catch (error) {
@@ -426,42 +496,36 @@ async function callDoubao(prompt: string): Promise<AIResponse> {
 }
 
 /**
- * 调用豆包 API - 获取三字名扩展
+ * 调用 DeepSeek API - 获取三字名扩展
  */
-async function callDoubaoExpand(prompt: string): Promise<AIExpandResponse> {
-  const apiKey = Deno.env.get('ARK_API_KEY')
+async function callDeepSeekExpand(prompt: string): Promise<AIExpandResponse> {
+  const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
   if (!apiKey) {
-    throw new Error('ARK_API_KEY 未配置')
+    throw new Error('DEEPSEEK_API_KEY 未配置')
   }
 
-  const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'doubao-seed-1-6-flash-250828',
+      model: 'deepseek-chat',
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: prompt
-            }
-          ]
+          content: prompt
         }
       ],
       temperature: 0.8,
-      max_tokens: 2000,
-      thinking: { type: 'disabled' }
+      max_tokens: 2000
     })
   })
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('豆包 API 调用失败')
+    console.error('DeepSeek API 调用失败')
     console.error('状态码:', response.status)
     console.error('状态文本:', response.statusText)
     console.error('错误详情:', error)
@@ -471,7 +535,7 @@ async function callDoubaoExpand(prompt: string): Promise<AIExpandResponse> {
   const data = await response.json()
   let content = data.choices[0]?.message?.content
 
-  console.log('豆包扩展 原始返回:', content)
+  console.log('DeepSeek 扩展 原始返回:', content)
 
   if (!content) {
     throw new Error('AI 返回内容为空')
@@ -559,11 +623,12 @@ serve(async (req) => {
   try {
     const params: NamingParams = await req.json()
 
-    if (!params.surname || !params.birthday || !params.gender || !params.style) {
+    // 参数验证：姓氏、性别、风格必填，生日可选
+    if (!params.surname || !params.gender || !params.style) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: '参数不完整'
+          error: '参数不完整：姓氏、性别、风格为必填项'
         }),
         {
           status: 400,
@@ -572,22 +637,25 @@ serve(async (req) => {
       )
     }
 
+    // 判断是否启用五行分析（根据是否有生日自动判断）
+    const hasBirthday = !!params.birthday
+
     // 判断是扩展请求还是初始请求
     if (params.expandChar) {
       // === 扩展请求：生成三字名 ===
       console.log('扩展请求：生成单字 "' + params.expandChar + '" 的三字名')
 
       let bazi: BaziInfo | null = null
-      if (params.useWuxing === 'yes') {
+      if (hasBirthday) {
         console.log('计算八字...')
-        bazi = calculateBazi(params.birthday)
+        bazi = calculateBazi(params.birthday!, params.birthHour)
       }
 
       console.log('构造扩展 Prompt...')
       const expandPrompt = buildExpandPrompt(params, bazi, params.expandChar)
 
-      console.log('调用豆包 API 获取三字名扩展...')
-      const expandResult = await callDoubaoExpand(expandPrompt)
+      console.log('调用 DeepSeek API 获取三字名扩展...')
+      const expandResult = await callDeepSeekExpand(expandPrompt)
 
       console.log('AI 返回的 doubleChars 数量:', expandResult.doubleChars.length)
       if (expandResult.doubleChars.length > 0) {
@@ -611,27 +679,27 @@ serve(async (req) => {
       )
     }
 
-    // === 初始请求：生成单字名 ===
-    console.log('初始请求：生成单字名')
-    console.log('是否使用五行:', params.useWuxing)
+    // === 初始请求：生成姓名方案 ===
+    console.log('初始请求：生成姓名方案')
+    console.log('是否有生日（启用五行）:', hasBirthday)
 
     let bazi: BaziInfo | null = null
-    if (params.useWuxing === 'yes') {
+    if (hasBirthday) {
       console.log('计算八字...')
-      bazi = calculateBazi(params.birthday)
+      bazi = calculateBazi(params.birthday!, params.birthHour)
       console.log('八字计算结果:', bazi)
     }
 
     console.log('构造 Prompt...')
     const prompt = buildPrompt(params, bazi)
 
-    console.log('调用豆包 API...')
-    const aiResult = await callDoubao(prompt)
+    console.log('调用 DeepSeek API...')
+    const aiResult = await callDeepSeek(prompt)
 
     // 打印调试信息
-    console.log('AI 返回的 singleChars 数量:', aiResult.singleChars.length)
-    if (aiResult.singleChars.length > 0) {
-      console.log('第一个候选字示例:', aiResult.singleChars[0])
+    console.log('AI 返回的 names 数量:', aiResult.names.length)
+    if (aiResult.names.length > 0) {
+      console.log('第一个姓名方案示例:', aiResult.names[0])
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -643,7 +711,7 @@ serve(async (req) => {
     const responseData = {
       success: true,
       data: {
-        singleChars: aiResult.singleChars,
+        names: aiResult.names,
         bazi: bazi ? {
           year: bazi.year,
           month: bazi.month,

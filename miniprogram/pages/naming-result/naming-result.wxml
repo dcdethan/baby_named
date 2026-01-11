@@ -1,0 +1,104 @@
+<!-- pages/naming-result/naming-result.wxml -->
+<view class="result-container">
+  <!-- 八字信息（如有） -->
+  <view class="bazi-card" wx:if="{{bazi}}">
+    <view class="card-title">八字五行分析</view>
+    <view class="bazi-row">
+      <view class="bazi-item">
+        <text class="bazi-label">年柱</text>
+        <text class="bazi-value">{{bazi.year}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">月柱</text>
+        <text class="bazi-value">{{bazi.month}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">日柱</text>
+        <text class="bazi-value">{{bazi.day}}</text>
+      </view>
+      <view class="bazi-item">
+        <text class="bazi-label">时柱</text>
+        <text class="bazi-value">{{bazi.hour}}</text>
+      </view>
+    </view>
+    <view class="bazi-result">
+      <text class="result-tag">{{bazi.wuxingResult}}</text>
+    </view>
+    <view class="bazi-explanation">
+      <text>{{bazi.wuxingExplanation}}</text>
+    </view>
+  </view>
+
+  <!-- 姓名方案列表 -->
+  <view class="names-section">
+    <view class="section-title">为您推荐以下姓名</view>
+
+    <view class="name-card" wx:for="{{names}}" wx:key="index">
+      <view class="name-header">
+        <view class="name-main">
+          <text class="full-name">{{item.fullName}}</text>
+          <text class="pinyin">{{item.pinyin}}</text>
+        </view>
+        <view
+          class="favorite-btn {{favorites[index] ? 'active' : ''}}"
+          bindtap="toggleFavorite"
+          data-index="{{index}}"
+        >
+          <text class="star">{{favorites[index] ? '★' : '☆'}}</text>
+        </view>
+      </view>
+
+      <view class="name-score">
+        <text class="score-label">综合评分</text>
+        <text class="score-value">{{item.score}}</text>
+        <text class="score-unit">分</text>
+      </view>
+
+      <view class="chars-info">
+        <view class="char-tag" wx:for="{{item.chars}}" wx:for-item="char" wx:key="char">
+          <text class="char-text">{{char.char}}</text>
+          <text class="char-meta">{{char.pinyin}} · {{char.wuxing}} · {{char.strokes}}画</text>
+        </view>
+      </view>
+
+      <view class="name-analysis">
+        <text>{{item.analysis}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <button
+      class="action-btn refresh-btn {{refreshing ? 'loading' : ''}}"
+      bindtap="handleRefresh"
+      disabled="{{refreshing}}"
+    >
+      <text>{{refreshing ? '生成中...' : '换一批'}}</text>
+    </button>
+    <button class="action-btn style-btn" bindtap="showStylePicker">
+      <text>调整风格</text>
+    </button>
+  </view>
+
+  <!-- 风格选择器 -->
+  <view class="style-picker-mask {{showStylePicker ? 'show' : ''}}" bindtap="hideStylePicker">
+    <view class="style-picker" catchtap="">
+      <view class="picker-header">
+        <text class="picker-title">选择起名风格</text>
+        <text class="picker-close" bindtap="hideStylePicker">×</text>
+      </view>
+      <view class="style-options">
+        <view
+          class="style-option"
+          wx:for="{{styleOptions}}"
+          wx:key="value"
+          bindtap="selectStyle"
+          data-style="{{item.value}}"
+        >
+          <text class="style-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

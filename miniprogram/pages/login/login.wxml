@@ -1,0 +1,32 @@
+<!-- pages/login/login.wxml -->
+<view class="login-container">
+  <!-- Logo 区域 -->
+  <view class="logo-section">
+    <view class="logo-icon">
+      <text class="logo-text">名</text>
+    </view>
+    <text class="app-name">起名宝典</text>
+    <text class="app-slogan">为宝宝取一个好名字</text>
+  </view>
+
+  <!-- 登录按钮区域 -->
+  <view class="login-section">
+    <button
+      class="login-btn {{loading ? 'loading' : ''}}"
+      bindtap="handleLogin"
+      disabled="{{loading}}"
+    >
+      <text wx:if="{{!loading}}">微信快捷登录</text>
+      <text wx:else>登录中...</text>
+    </button>
+    <text class="login-tip">登录后可使用收藏、历史记录等功能</text>
+  </view>
+
+  <!-- 底部说明 -->
+  <view class="footer">
+    <text class="footer-text">登录即表示同意</text>
+    <text class="footer-link">《用户协议》</text>
+    <text class="footer-text">和</text>
+    <text class="footer-link">《隐私政策》</text>
+  </view>
+</view>

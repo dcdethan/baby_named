@@ -1,0 +1,76 @@
+<!-- pages/home/home.wxml -->
+<view class="home-container">
+  <!-- 头部标题 -->
+  <view class="header">
+    <text class="title">起名宝典</text>
+    <text class="subtitle">为宝宝取一个好名字</text>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="feature-grid">
+    <!-- AI 智能起名 -->
+    <view class="feature-card" bindtap="goToNaming">
+      <view class="feature-icon naming-icon">
+        <text class="icon-text">名</text>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">智慧起名</text>
+        <text class="feature-desc">结合八字五行，智能生成</text>
+      </view>
+      <view class="feature-arrow">
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 名字分析 -->
+    <view class="feature-card" bindtap="goToAnalysis">
+      <view class="feature-icon analysis-icon">
+        <text class="icon-text">析</text>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">名字分析</text>
+        <text class="feature-desc">解读姓名寓意与评分</text>
+      </view>
+      <view class="feature-arrow">
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 起名字库 -->
+    <view class="feature-card" bindtap="goToLibrary">
+      <view class="feature-icon library-icon">
+        <text class="icon-text">字</text>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">起名字库</text>
+        <text class="feature-desc">精选常用起名汉字</text>
+      </view>
+      <view class="feature-arrow">
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 使用说明 -->
+  <view class="tips-section">
+    <view class="tips-title">使用指南</view>
+    <view class="tips-list">
+      <view class="tip-item">
+        <text class="tip-num">1</text>
+        <text class="tip-text">填写宝宝的基本信息（姓氏、性别）</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-num">2</text>
+        <text class="tip-text">选择起名风格（可选填生日启用五行分析）</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-num">3</text>
+        <text class="tip-text">为您智能生成多个精选名字方案</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-num">4</text>
+        <text class="tip-text">收藏喜欢的名字，随时查看</text>
+      </view>
+    </view>
+  </view>
+</view>

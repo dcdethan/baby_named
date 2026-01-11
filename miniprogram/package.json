@@ -1,7 +1,7 @@
 {
   "name": "ai-naming-miniprogram",
   "version": "1.0.0",
-  "description": "AI智能起名微信小程序",
+  "description": "智慧起名微信小程序",
   "scripts": {
     "tsc": "tsc"
   },

@@ -2,6 +2,6 @@
 App({
   globalData: {},
   onLaunch() {
-    console.log('AI智能起名小程序启动')
+    console.log('起名宝典小程序启动')
   }
 })

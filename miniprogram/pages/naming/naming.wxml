@@ -1,0 +1,161 @@
+<!-- pages/naming/naming.wxml -->
+<view class="naming-container">
+  <view class="form-section">
+    <!-- 姓氏 -->
+    <view class="form-item">
+      <text class="form-label">姓氏 <text class="required">*</text></text>
+      <input
+        class="form-input"
+        placeholder="请输入姓氏"
+        value="{{surname}}"
+        bindinput="onSurnameInput"
+        bindblur="onSurnameBlur"
+      />
+    </view>
+
+    <!-- 性别 -->
+    <view class="form-item">
+      <text class="form-label">性别 <text class="required">*</text></text>
+      <radio-group class="radio-group" bindchange="onGenderChange">
+        <label class="radio-label {{gender === 'male' ? 'checked' : ''}}">
+          <radio value="male" checked="{{gender === 'male'}}" />
+          <text>男孩</text>
+        </label>
+        <label class="radio-label {{gender === 'female' ? 'checked' : ''}}">
+          <radio value="female" checked="{{gender === 'female'}}" />
+          <text>女孩</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <!-- 生日开关 -->
+    <view class="form-item switch-item">
+      <view class="switch-left">
+        <text class="form-label">填写生日</text>
+        <text class="form-tip">（可启用五行八字分析）</text>
+      </view>
+      <switch checked="{{hasBirthday}}" bindchange="onBirthdayToggle" color="#667eea" />
+    </view>
+
+    <!-- 生日选择（可选） -->
+    <view class="form-item" wx:if="{{hasBirthday}}">
+      <text class="form-label">出生日期</text>
+      <picker
+        mode="date"
+        value="{{birthday}}"
+        start="{{startDate}}"
+        end="{{endDate}}"
+        bindchange="onBirthdayChange"
+      >
+        <view class="picker-value {{birthday ? '' : 'placeholder'}}">
+          {{birthday || '请选择出生日期'}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 出生时辰（可选） -->
+    <view class="form-item" wx:if="{{hasBirthday}}">
+      <text class="form-label">出生时辰</text>
+      <picker
+        mode="selector"
+        range="{{hourOptions}}"
+        value="{{hourIndex}}"
+        bindchange="onHourChange"
+      >
+        <view class="picker-value {{hourIndex > 0 ? '' : 'placeholder'}}">
+          {{hourOptions[hourIndex]}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 起名风格 -->
+    <view class="form-item">
+      <text class="form-label">起名风格 <text class="required">*</text></text>
+      <picker
+        mode="selector"
+        range="{{styleOptions}}"
+        range-key="label"
+        value="{{styleIndex}}"
+        bindchange="onStyleChange"
+      >
+        <view class="picker-value">
+          {{styleOptions[styleIndex].label}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 自定义内容（点击展开/收起） -->
+    <view class="form-item expand-item" bindtap="toggleCustomContent">
+      <view class="expand-header">
+        <text class="form-label">自定义内容</text>
+        <text class="form-tip">（名字类型、禁用字等）</text>
+      </view>
+      <text class="expand-icon">{{useCustomContent ? '收起 ▲' : '展开 ▼'}}</text>
+    </view>
+
+    <!-- 自定义选项 -->
+    <view class="custom-options" hidden="{{!useCustomContent}}">
+      <!-- 名字类型 -->
+      <view class="form-item">
+        <text class="form-label">名字类型</text>
+        <picker
+          mode="selector"
+          range="{{nameTypeOptions}}"
+          range-key="label"
+          value="{{nameTypeIndex}}"
+          bindchange="onNameTypeChange"
+        >
+          <view class="picker-value">
+            {{nameTypeOptions[nameTypeIndex].label}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- 禁用字 -->
+      <view class="form-item">
+        <text class="form-label">禁用字</text>
+        <input
+          class="form-input"
+          placeholder="输入不想使用的字"
+          value="{{disabledChars}}"
+          bindinput="onDisabledCharsInput"
+        />
+      </view>
+
+      <!-- 偏好字 -->
+      <view class="form-item">
+        <text class="form-label">偏好字</text>
+        <input
+          class="form-input"
+          placeholder="输入希望使用的字"
+          value="{{preferredChars}}"
+          bindinput="onPreferredCharsInput"
+        />
+      </view>
+
+      <!-- 笔画数 -->
+      <view class="form-item">
+        <text class="form-label">笔画数</text>
+        <input
+          class="form-input"
+          type="number"
+          placeholder="名字部分的总笔画数"
+          value="{{strokeCount}}"
+          bindinput="onStrokeCountInput"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button
+      class="submit-btn {{loading ? 'loading' : ''}}"
+      bindtap="onSubmit"
+      disabled="{{loading}}"
+    >
+      <text wx:if="{{!loading}}">一键生成姓名</text>
+      <text wx:else>正在生成中...</text>
+    </button>
+  </view>
+</view>

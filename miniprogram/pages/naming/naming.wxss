@@ -1,0 +1,212 @@
+/* pages/naming/naming.wxss */
+.naming-container {
+  min-height: 100vh;
+  background: #f5f6fa;
+  padding-bottom: 180rpx;
+}
+
+.form-section {
+  padding: 30rpx;
+}
+
+.form-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+
+.required {
+  color: #ff4d4f;
+}
+
+.form-tip {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: normal;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #bbb;
+}
+
+/* 单选组 */
+.radio-group {
+  display: flex;
+  gap: 40rpx;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 32rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.radio-label.checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.radio-label radio {
+  display: none;
+}
+
+/* 开关项 */
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.switch-left {
+  display: flex;
+  align-items: center;
+}
+
+.switch-left .form-label {
+  margin-bottom: 0;
+  margin-right: 10rpx;
+}
+
+.switch-left .form-tip {
+  margin-bottom: 0;
+}
+
+/* 展开收起项 */
+.expand-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.expand-header {
+  display: flex;
+  align-items: center;
+}
+
+.expand-header .form-label {
+  margin-bottom: 0;
+  margin-right: 10rpx;
+}
+
+.expand-header .form-tip {
+  margin-bottom: 0;
+}
+
+.expand-icon {
+  font-size: 24rpx;
+  color: #667eea;
+}
+
+/* 选择器 */
+.picker-value {
+  height: 80rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.picker-value.placeholder {
+  color: #bbb;
+}
+
+/* 自定义选项 */
+.custom-options {
+  background: #f8f9ff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  border: 2rpx solid #e8eaff;
+}
+
+.custom-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.custom-options .form-item {
+  padding: 24rpx 0;
+  margin-bottom: 0;
+  background: transparent !important;
+  border-radius: 0;
+  border-bottom: 1rpx solid #e8eaff;
+}
+
+.custom-options .form-item:first-child {
+  padding-top: 0;
+}
+
+.custom-options .form-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.custom-options .form-label {
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 提交按钮 */
+.submit-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30rpx;
+  background: #fff;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.submit-btn {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: bold;
+  border-radius: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn.loading {
+  opacity: 0.7;
+}

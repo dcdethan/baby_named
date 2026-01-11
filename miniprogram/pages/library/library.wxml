@@ -1,0 +1,116 @@
+<!-- pages/library/library.wxml -->
+<view class="library-container">
+  <!-- 搜索区域 -->
+  <view class="search-section">
+    <view class="search-box">
+      <input
+        class="search-input"
+        placeholder="搜拼音 / 部首 / 寓意"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="handleSearch"
+      />
+      <button class="search-btn" bindtap="handleSearch">搜索</button>
+    </view>
+  </view>
+
+  <!-- 分类导航栏 -->
+  <scroll-view class="category-nav" scroll-x enable-flex>
+    <view
+      class="category-item {{activeCategory === item.value ? 'active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="value"
+      bindtap="selectCategory"
+      data-category="{{item.value}}"
+    >
+      {{item.label}}
+    </view>
+  </scroll-view>
+
+  <!-- 单字列表 -->
+  <view class="chars-section">
+    <view class="chars-grid" wx:if="{{chars.length > 0}}">
+      <view
+        class="char-card"
+        wx:for="{{chars}}"
+        wx:key="id"
+        bindtap="showCharDetail"
+        data-char="{{item}}"
+      >
+        <text class="char-text">{{item.char}}</text>
+        <text class="char-desc">{{item.meaningKeyword || '暂无'}}</text>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{chars.length === 0 && !loading}}">
+      <view class="empty-icon">字</view>
+      <text class="empty-text">暂无数据</text>
+      <text class="empty-tip">请尝试其他分类或搜索条件</text>
+    </view>
+
+    <!-- 加载状态 -->
+    <view class="loading-state" wx:if="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 单字详情弹窗 -->
+  <view class="detail-modal {{showDetail ? 'show' : ''}}" bindtap="hideCharDetail">
+    <view class="detail-content" catchtap="stopPropagation">
+      <view class="detail-close" bindtap="hideCharDetail">×</view>
+
+      <view class="detail-header">
+        <text class="detail-char">{{selectedChar.char}}</text>
+        <text class="detail-pinyin">{{selectedChar.pinyin}}</text>
+      </view>
+
+      <view class="detail-info">
+        <view class="info-row">
+          <text class="info-label">繁体</text>
+          <text class="info-value">{{selectedChar.traditional || selectedChar.char}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">笔画</text>
+          <text class="info-value">{{selectedChar.strokes}}画</text>
+        </view>
+        <view class="info-row" wx:if="{{selectedChar.radical}}">
+          <text class="info-label">部首</text>
+          <text class="info-value">{{selectedChar.radical}}</text>
+        </view>
+        <view class="info-row" wx:if="{{selectedChar.wuxing}}">
+          <text class="info-label">五行</text>
+          <text class="info-value">{{selectedChar.wuxing}}</text>
+        </view>
+      </view>
+
+      <view class="detail-section">
+        <text class="section-title">本义</text>
+        <text class="section-content">{{selectedChar.original_meaning || '暂无'}}</text>
+      </view>
+
+      <view class="detail-section">
+        <text class="section-title">寓意</text>
+        <text class="section-content">{{selectedChar.meaning || '暂无'}}</text>
+      </view>
+
+      <view class="detail-section" wx:if="{{selectedChar.name_examples && selectedChar.name_examples.length > 0}}">
+        <text class="section-title">搭配示例</text>
+        <view class="examples-list">
+          <text class="example-item" wx:for="{{selectedChar.name_examples}}" wx:key="*this">
+            {{item}}
+          </text>
+        </view>
+      </view>
+
+      <view class="detail-section" wx:if="{{selectedChar.popularity}}">
+        <text class="section-title">使用热度</text>
+        <view class="popularity-bar">
+          <view class="popularity-fill" style="width: {{selectedChar.popularity}}%"></view>
+        </view>
+        <text class="popularity-text">{{selectedChar.popularity}}%</text>
+      </view>
+    </view>
+  </view>
+</view>

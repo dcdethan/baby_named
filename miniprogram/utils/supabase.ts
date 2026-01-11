@@ -30,10 +30,20 @@ export async function invokeEdgeFunction<T = any>(
         } else {
           console.error('Edge Function 调用失败 - 状态码:', res.statusCode)
           console.error('Edge Function 调用失败 - 响应体:', JSON.stringify(res.data))
+          // 提取错误信息
+          const resData = res.data as any
+          let errorMessage = '调用失败'
+          if (typeof resData === 'string') {
+            errorMessage = resData
+          } else if (resData?.message) {
+            errorMessage = resData.message
+          } else if (resData?.error) {
+            errorMessage = typeof resData.error === 'string' ? resData.error : resData.error.message || '调用失败'
+          }
           resolve({
             data: null,
             error: {
-              message: res.data || '调用失败',
+              message: errorMessage,
               statusCode: res.statusCode
             }
           })

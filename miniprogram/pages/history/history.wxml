@@ -1,0 +1,58 @@
+<!-- pages/history/history.wxml -->
+<view class="history-container">
+  <!-- 历史记录列表 -->
+  <view class="history-list" wx:if="{{records.length > 0}}">
+    <view
+      class="history-card"
+      wx:for="{{records}}"
+      wx:key="id"
+      bindtap="viewDetail"
+      data-record="{{item}}"
+    >
+      <view class="card-header">
+        <text class="surname">{{item.params.surname}}姓</text>
+        <text class="time">{{item.created_at}}</text>
+      </view>
+
+      <view class="card-body">
+        <view class="info-tags">
+          <text class="info-tag">{{item.params.gender === 'male' ? '男孩' : '女孩'}}</text>
+          <text class="info-tag">{{item.params.style === 'classical' ? '古典' : item.params.style === 'modern' ? '现代' : item.params.style === 'poetic' ? '诗意' : '自定义'}}</text>
+          <text class="info-tag" wx:if="{{item.params.birthday}}">含八字</text>
+        </view>
+
+        <view class="names-preview" wx:if="{{item.result && item.result.names}}">
+          <text class="preview-label">生成名字：</text>
+          <text class="preview-names">
+            <block wx:for="{{item.result.names}}" wx:for-item="name" wx:key="fullName">
+              {{name.fullName}}{{index < item.result.names.length - 1 ? '、' : ''}}
+            </block>
+          </text>
+        </view>
+      </view>
+
+      <view class="card-footer">
+        <text class="view-btn">查看详情 ›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{records.length === 0 && !loading}}">
+    <text class="empty-icon">☰</text>
+    <text class="empty-text">暂无起名历史</text>
+    <text class="empty-tip">去首页开始你的第一次起名吧</text>
+    <navigator url="/pages/home/home" open-type="switchTab" class="go-naming-btn">
+      开始起名
+    </navigator>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="loading-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="no-more" wx:if="{{!hasMore && records.length > 0}}">
+    <text>— 已经到底了 —</text>
+  </view>
+</view>

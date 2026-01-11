@@ -1,14 +1,41 @@
 {
   "pages": [
-    "pages/index/index",
-    "pages/result/result"
+    "pages/home/home",
+    "pages/login/login",
+    "pages/naming/naming",
+    "pages/naming-result/naming-result",
+    "pages/analysis/analysis",
+    "pages/library/library",
+    "pages/mine/mine",
+    "pages/favorites/favorites",
+    "pages/history/history"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "AI智能起名",
-    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#667eea",
+    "navigationBarTitleText": "起名宝典",
+    "navigationBarTextStyle": "white",
     "backgroundColor": "#f8f8f8"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#667eea",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "assets/icons/mine.png",
+        "selectedIconPath": "assets/icons/mine-active.png"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

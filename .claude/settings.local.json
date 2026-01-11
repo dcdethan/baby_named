@@ -11,7 +11,14 @@
       "Bash(git push)",
       "Bash(git push:*)",
       "Bash(git ls-remote:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(supabase secrets:*)",
+      "Bash(del:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\mycode\\\\baby_named\\\\create-icons.ps1\")",
+      "Bash(supabase functions list:*)"
     ]
   }
 }

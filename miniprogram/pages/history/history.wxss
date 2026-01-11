@@ -1,0 +1,132 @@
+/* pages/history/history.wxss */
+.history-container {
+  min-height: 100vh;
+  background: #f5f6fa;
+  padding: 30rpx;
+}
+
+/* 历史记录卡片 */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.history-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+}
+
+.history-card:active {
+  opacity: 0.9;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.surname {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.card-body {
+  margin-bottom: 20rpx;
+}
+
+.info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.info-tag {
+  padding: 6rpx 16rpx;
+  background: #f5f6fa;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+.names-preview {
+  display: flex;
+  align-items: flex-start;
+}
+
+.preview-label {
+  font-size: 26rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.preview-names {
+  font-size: 26rpx;
+  color: #667eea;
+  font-weight: 500;
+  flex: 1;
+}
+
+.card-footer {
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.view-btn {
+  font-size: 26rpx;
+  color: #667eea;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 80rpx;
+  color: #ddd;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 30rpx;
+  color: #999;
+}
+
+.empty-tip {
+  display: block;
+  font-size: 26rpx;
+  color: #bbb;
+  margin-top: 12rpx;
+}
+
+.go-naming-btn {
+  display: inline-block;
+  margin-top: 40rpx;
+  padding: 20rpx 60rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+}
+
+/* 加载更多 */
+.loading-more, .no-more {
+  text-align: center;
+  padding: 30rpx;
+  font-size: 26rpx;
+  color: #999;
+}

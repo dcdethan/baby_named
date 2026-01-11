@@ -1,0 +1,113 @@
+<!-- pages/analysis/analysis.wxml -->
+<view class="analysis-container">
+  <!-- 输入区域 -->
+  <view class="input-section">
+    <view class="input-wrapper">
+      <input
+        class="name-input"
+        placeholder="请输入要分析的姓名"
+        value="{{fullName}}"
+        bindinput="onNameInput"
+        bindblur="onNameBlur"
+      />
+      <button
+        class="analyze-btn {{loading ? 'loading' : ''}}"
+        bindtap="handleAnalyze"
+        disabled="{{loading}}"
+      >
+        {{loading ? '分析中...' : '立即分析'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 分析结果 -->
+  <view class="result-section" wx:if="{{hasResult}}">
+    <!-- 基础信息 -->
+    <view class="result-card">
+      <view class="card-title">基础信息</view>
+      <view class="info-row">
+        <text class="info-label">姓氏</text>
+        <text class="info-value">{{result.basicInfo.surname}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">名字</text>
+        <text class="info-value">{{result.basicInfo.givenName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">总笔画</text>
+        <text class="info-value">{{result.basicInfo.totalStrokes}}画</text>
+      </view>
+    </view>
+
+    <!-- 读音分析 -->
+    <view class="result-card">
+      <view class="card-title">读音分析</view>
+      <view class="info-row">
+        <text class="info-label">拼音</text>
+        <text class="info-value">{{result.pronunciation.pinyin}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">声调</text>
+        <text class="info-value">{{result.pronunciation.tone}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">音韵</text>
+        <text class="info-value">{{result.pronunciation.harmony}}</text>
+      </view>
+    </view>
+
+    <!-- 字形结构 -->
+    <view class="result-card">
+      <view class="card-title">字形结构</view>
+      <view class="chars-grid">
+        <view class="char-item" wx:for="{{result.structure.chars}}" wx:key="char">
+          <text class="char-text">{{item.char}}</text>
+          <view class="char-detail">
+            <text class="detail-item">{{item.strokes}}画</text>
+            <text class="detail-item">{{item.radical}}部</text>
+            <text class="detail-item">{{item.structure}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 寓意解读 -->
+    <view class="result-card">
+      <view class="card-title">寓意解读</view>
+      <view class="meaning-content">
+        <text class="interpretation">{{result.meaning.interpretation}}</text>
+        <view class="origin" wx:if="{{result.meaning.origin}}">
+          <text class="origin-label">出处：</text>
+          <text class="origin-text">{{result.meaning.origin}}</text>
+        </view>
+        <view class="cultural" wx:if="{{result.meaning.culturalRef}}">
+          <text class="cultural-label">文化背景：</text>
+          <text class="cultural-text">{{result.meaning.culturalRef}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 建议 -->
+    <view class="result-card" wx:if="{{result.suggestions.length > 0}}">
+      <view class="card-title">参考建议</view>
+      <view class="suggestions-list">
+        <view class="suggestion-item" wx:for="{{result.suggestions}}" wx:key="index">
+          <text class="suggestion-num">{{index + 1}}</text>
+          <text class="suggestion-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar" wx:if="{{hasResult}}">
+    <button class="action-btn favorite-btn {{isFavorited ? 'active' : ''}}" bindtap="handleFavorite">
+      <text class="btn-icon">{{isFavorited ? '★' : '☆'}}</text>
+      <text>{{isFavorited ? '已收藏' : '收藏'}}</text>
+    </button>
+    <button class="action-btn share-btn" bindtap="handleShare">
+      <text class="btn-icon">↗</text>
+      <text>分享</text>
+    </button>
+  </view>
+</view>

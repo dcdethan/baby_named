@@ -1,0 +1,59 @@
+<!-- pages/mine/mine.wxml -->
+<view class="mine-container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-info" bindtap="{{isLoggedIn ? '' : 'goToLogin'}}">
+      <image
+        class="avatar"
+        src="{{user.avatarUrl || defaultAvatar}}"
+        mode="aspectFill"
+      />
+      <view class="user-detail">
+        <text class="nickname">{{user.nickname || defaultNickname}}</text>
+        <text class="user-id" wx:if="{{isLoggedIn}}">ID: {{user.id}}</text>
+        <text class="login-tip" wx:else>点击登录</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能列表 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goToFavorites">
+      <view class="menu-icon favorites-icon">
+        <text class="icon-text">★</text>
+      </view>
+      <text class="menu-title">我的收藏</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item" bindtap="goToHistory">
+      <view class="menu-icon history-icon">
+        <text class="icon-text">☰</text>
+      </view>
+      <text class="menu-title">起名历史</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 其他选项 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="handleFeedback">
+      <view class="menu-icon feedback-icon">
+        <text class="icon-text">✉</text>
+      </view>
+      <text class="menu-title">意见反馈</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-section" wx:if="{{isLoggedIn}}">
+    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+  </view>
+
+  <!-- 底部版权 -->
+  <view class="footer">
+    <text class="copyright">起名宝典 v1.0.0</text>
+    <text class="copyright">© 2024 All Rights Reserved</text>
+  </view>
+</view>
