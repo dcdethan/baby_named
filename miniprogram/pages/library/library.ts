@@ -1,6 +1,7 @@
 // pages/library/library.ts
 import { invokeEdgeFunction } from '../../utils/supabase'
 import { EDGE_FUNCTIONS } from '../../config/supabase'
+import { checkAndIncrementQuota } from '../../utils/quota'
 
 // 分类选项
 const CATEGORIES = [
@@ -54,6 +55,13 @@ Page({
     this.setData({ loading: true })
 
     try {
+      // 检查字库次数
+      const allowed = await checkAndIncrementQuota('library')
+      if (!allowed) {
+        this.setData({ loading: false })
+        return
+      }
+
       const { data, error } = await invokeEdgeFunction(
         EDGE_FUNCTIONS.characterLibrary,
         {
@@ -95,6 +103,13 @@ Page({
     this.setData({ loading: true })
 
     try {
+      // 检查字库次数
+      const allowed = await checkAndIncrementQuota('library')
+      if (!allowed) {
+        this.setData({ loading: false })
+        return
+      }
+
       const { data, error } = await invokeEdgeFunction(
         EDGE_FUNCTIONS.characterLibrary,
         {

@@ -7,6 +7,7 @@ import { invokeEdgeFunction } from './supabase'
 export interface UserInfo {
   id: string
   openid: string
+  phoneNumber: string | null
   nickname: string | null
   avatarUrl: string | null
 }
@@ -15,6 +16,8 @@ export interface UserInfo {
 const STORAGE_KEYS = {
   USER_INFO: 'user_info',
   OPENID: 'openid',
+  PHONE: 'phone_number',
+  SESSION_KEY: 'session_key',
   IS_LOGGED_IN: 'is_logged_in'
 }
 
@@ -56,12 +59,48 @@ export function getOpenId(): string | null {
 }
 
 /**
+ * 获取手机号
+ */
+export function getPhoneNumber(): string | null {
+  try {
+    return wx.getStorageSync(STORAGE_KEYS.PHONE) || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 保存 session_key 到本地（用于解密手机号）
+ */
+function saveSessionKey(sessionKey: string): void {
+  try {
+    wx.setStorageSync(STORAGE_KEYS.SESSION_KEY, sessionKey)
+  } catch (e) {
+    console.error('保存 session_key 失败:', e)
+  }
+}
+
+/**
+ * 获取 session_key
+ */
+function getSessionKey(): string | null {
+  try {
+    return wx.getStorageSync(STORAGE_KEYS.SESSION_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+/**
  * 保存用户信息到本地
  */
 function saveUserToStorage(user: UserInfo): void {
   try {
     wx.setStorageSync(STORAGE_KEYS.USER_INFO, JSON.stringify(user))
     wx.setStorageSync(STORAGE_KEYS.OPENID, user.openid)
+    if (user.phoneNumber) {
+      wx.setStorageSync(STORAGE_KEYS.PHONE, user.phoneNumber)
+    }
     wx.setStorageSync(STORAGE_KEYS.IS_LOGGED_IN, true)
   } catch (e) {
     console.error('保存用户信息失败:', e)
@@ -75,6 +114,8 @@ export function logout(): void {
   try {
     wx.removeStorageSync(STORAGE_KEYS.USER_INFO)
     wx.removeStorageSync(STORAGE_KEYS.OPENID)
+    wx.removeStorageSync(STORAGE_KEYS.PHONE)
+    wx.removeStorageSync(STORAGE_KEYS.SESSION_KEY)
     wx.removeStorageSync(STORAGE_KEYS.IS_LOGGED_IN)
   } catch (e) {
     console.error('清除登录状态失败:', e)
@@ -82,7 +123,63 @@ export function logout(): void {
 }
 
 /**
- * 微信静默登录
+ * 获取微信登录 session（用于后续解密手机号）
+ * 返回 code，同时后端会缓存 session_key
+ */
+export async function getWxSession(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    wx.login({
+      success: async (res) => {
+        if (!res.code) {
+          reject(new Error('获取登录 code 失败'))
+          return
+        }
+        resolve(res.code)
+      },
+      fail: (err) => {
+        console.error('wx.login 失败:', err)
+        reject(new Error('微信登录失败'))
+      }
+    })
+  })
+}
+
+/**
+ * 手机号登录
+ * @param code wx.login 获取的 code
+ * @param phoneCode getPhoneNumber 回调中的 code（新版API）
+ */
+export async function loginWithPhone(code: string, phoneCode: string): Promise<UserInfo> {
+  try {
+    const { data, error } = await invokeEdgeFunction<{
+      success: boolean
+      data?: { user: UserInfo }
+      error?: string
+    }>(AUTH_FUNCTION, {
+      action: 'loginWithPhone',
+      code,
+      phoneCode
+    })
+
+    if (error || !data?.success || !data?.data?.user) {
+      const errMsg = error?.message || data?.error || '登录失败'
+      throw new Error(errMsg)
+    }
+
+    // 保存用户信息
+    const user = data.data.user
+    saveUserToStorage(user)
+
+    return user
+  } catch (e: any) {
+    console.error('手机号登录失败:', e)
+    throw e
+  }
+}
+
+/**
+ * 微信静默登录（保留用于兼容，但不推荐使用）
+ * @deprecated 请使用 loginWithPhone
  */
 export async function login(): Promise<UserInfo> {
   return new Promise((resolve, reject) => {
@@ -128,18 +225,6 @@ export async function login(): Promise<UserInfo> {
   })
 }
 
-/**
- * 检查登录状态，未登录则跳转到登录页
- */
-export function checkLoginAndRedirect(): boolean {
-  if (!isLoggedIn()) {
-    wx.redirectTo({
-      url: '/pages/login/login'
-    })
-    return false
-  }
-  return true
-}
 
 /**
  * 更新用户信息

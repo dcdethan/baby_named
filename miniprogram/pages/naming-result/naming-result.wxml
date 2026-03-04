@@ -1,31 +1,53 @@
 <!-- pages/naming-result/naming-result.wxml -->
 <view class="result-container">
-  <!-- 八字信息（如有） -->
+  <!-- 五行八字分析（如有） -->
   <view class="bazi-card" wx:if="{{bazi}}">
-    <view class="card-title">八字五行分析</view>
-    <view class="bazi-row">
-      <view class="bazi-item">
-        <text class="bazi-label">年柱</text>
-        <text class="bazi-value">{{bazi.year}}</text>
+    <view class="card-title">五行八字分析</view>
+
+    <!-- 四柱表格 -->
+    <view class="bazi-table">
+      <!-- 表头 -->
+      <view class="bazi-table-row bazi-table-header">
+        <view class="bazi-table-cell">年柱</view>
+        <view class="bazi-table-cell">月柱</view>
+        <view class="bazi-table-cell">日柱</view>
+        <view class="bazi-table-cell">时柱</view>
       </view>
-      <view class="bazi-item">
-        <text class="bazi-label">月柱</text>
-        <text class="bazi-value">{{bazi.month}}</text>
+      <!-- 干支 -->
+      <view class="bazi-table-row bazi-table-ganzhi">
+        <view class="bazi-table-cell">{{bazi.year}}</view>
+        <view class="bazi-table-cell">{{bazi.month}}</view>
+        <view class="bazi-table-cell">{{bazi.day}}</view>
+        <view class="bazi-table-cell">{{bazi.hour}}</view>
       </view>
-      <view class="bazi-item">
-        <text class="bazi-label">日柱</text>
-        <text class="bazi-value">{{bazi.day}}</text>
-      </view>
-      <view class="bazi-item">
-        <text class="bazi-label">时柱</text>
-        <text class="bazi-value">{{bazi.hour}}</text>
+      <!-- 五行 -->
+      <view class="bazi-table-row bazi-table-wuxing">
+        <view class="bazi-table-cell">{{bazi.yearWuxing}}</view>
+        <view class="bazi-table-cell">{{bazi.monthWuxing}}</view>
+        <view class="bazi-table-cell">{{bazi.dayWuxing}}</view>
+        <view class="bazi-table-cell">{{bazi.hourWuxing}}</view>
       </view>
     </view>
+
+    <!-- 五行结果标签 -->
     <view class="bazi-result">
       <text class="result-tag">{{bazi.wuxingResult}}</text>
     </view>
-    <view class="bazi-explanation">
-      <text>{{bazi.wuxingExplanation}}</text>
+
+    <!-- 五行分析 -->
+    <view class="bazi-section">
+      <view class="bazi-section-title">五行分析</view>
+      <view class="bazi-section-content bazi-explanation">
+        <text>{{bazi.wuxingExplanation}}</text>
+      </view>
+    </view>
+
+    <!-- 起名建议 -->
+    <view class="bazi-section" wx:if="{{bazi.namingSuggestion}}">
+      <view class="bazi-section-title">起名建议</view>
+      <view class="bazi-section-content bazi-suggestion">
+        <text>{{bazi.namingSuggestion}}</text>
+      </view>
     </view>
   </view>
 
@@ -34,35 +56,105 @@
     <view class="section-title">为您推荐以下姓名</view>
 
     <view class="name-card" wx:for="{{names}}" wx:key="index">
+      <!-- 姓名头部：姓名+拼音+收藏 -->
       <view class="name-header">
         <view class="name-main">
           <text class="full-name">{{item.fullName}}</text>
           <text class="pinyin">{{item.pinyin}}</text>
         </view>
-        <view
-          class="favorite-btn {{favorites[index] ? 'active' : ''}}"
-          bindtap="toggleFavorite"
-          data-index="{{index}}"
-        >
-          <text class="star">{{favorites[index] ? '★' : '☆'}}</text>
+        <view class="name-actions">
+          <view
+            class="action-icon-btn {{expandedIndex === index ? 'active' : ''}}"
+            bindtap="toggleAnalysis"
+            data-index="{{index}}"
+          >
+            <text class="action-text">{{expandedIndex === index ? '收起' : '解析'}}</text>
+          </view>
+          <view
+            class="action-icon-btn favorite {{favorites[index] ? 'active' : ''}}"
+            bindtap="toggleFavorite"
+            data-index="{{index}}"
+          >
+            <text class="star">{{favorites[index] ? '★' : '☆'}}</text>
+          </view>
         </view>
       </view>
 
-      <view class="name-score">
-        <text class="score-label">综合评分</text>
-        <text class="score-value">{{item.score}}</text>
-        <text class="score-unit">分</text>
-      </view>
-
-      <view class="chars-info">
-        <view class="char-tag" wx:for="{{item.chars}}" wx:for-item="char" wx:key="char">
-          <text class="char-text">{{char.char}}</text>
-          <text class="char-meta">{{char.pinyin}} · {{char.wuxing}} · {{char.strokes}}画</text>
+      <!-- 展开的解析内容 -->
+      <view class="analysis-panel" wx:if="{{expandedIndex === index}}">
+        <!-- 寓意解析 - 每个字突出展示 -->
+        <view class="char-analysis-section">
+          <view class="analysis-section-title">寓意解析</view>
+          <view class="char-analysis-list">
+            <view class="char-analysis-item" wx:for="{{item.chars}}" wx:for-item="char" wx:for-index="charIndex" wx:key="charIndex">
+              <view class="char-highlight">
+                <text class="char-big">{{char.char}}</text>
+              </view>
+              <view class="char-meaning">
+                <text class="meaning-text">{{item.charMeanings[charIndex] || '寓意美好'}}</text>
+              </view>
+            </view>
+          </view>
+          <!-- 整体寓意 -->
+          <view class="overall-meaning" wx:if="{{item.overallMeaning}}">
+            <text class="overall-label">整体寓意</text>
+            <text class="overall-text">{{item.overallMeaning}}</text>
+          </view>
         </view>
-      </view>
 
-      <view class="name-analysis">
-        <text>{{item.analysis}}</text>
+        <!-- 五行数理（仅当启用五行分析时显示） -->
+        <view class="wuxing-analysis-section" wx:if="{{bazi && item.chars}}">
+          <view class="analysis-section-title">五行数理</view>
+
+          <!-- 名字五行 -->
+          <view class="wuxing-chars">
+            <view class="wuxing-char-item" wx:for="{{item.chars}}" wx:for-item="char" wx:key="char">
+              <text class="wuxing-char">{{char.char}}</text>
+              <text class="wuxing-element wuxing-{{char.wuxingClass}}">{{char.wuxing}}</text>
+              <text class="wuxing-strokes">{{char.strokes}}画</text>
+            </view>
+          </view>
+
+          <!-- AI五行分析 -->
+          <view class="wuxing-ai-analysis" wx:if="{{item.wuxingAnalysis}}">
+            <text class="wuxing-ai-text">{{item.wuxingAnalysis}}</text>
+          </view>
+
+          <!-- 五行配置分析 -->
+          <view class="wuxing-config">
+            <view class="config-row">
+              <text class="config-label">姓名五行</text>
+              <text class="config-value">{{item.wuxingConfig || '—'}}</text>
+            </view>
+            <view class="config-row">
+              <text class="config-label">八字喜用</text>
+              <text class="config-value">{{bazi.lackingElements.length > 0 ? '喜' + bazi.lackingElements[0] : '五行平衡'}}</text>
+            </view>
+            <view class="config-row">
+              <text class="config-label">五行补益</text>
+              <text class="config-value {{item.wuxingMatch ? 'match' : ''}}">{{item.wuxingMatchText || '—'}}</text>
+            </view>
+          </view>
+
+          <!-- 笔画数理 -->
+          <view class="stroke-analysis">
+            <view class="stroke-row">
+              <text class="stroke-label">总笔画</text>
+              <text class="stroke-value">{{item.totalStrokes}}画</text>
+            </view>
+            <view class="stroke-row">
+              <text class="stroke-label">数理评价</text>
+              <text class="stroke-value stroke-rating">{{item.strokeRating || '吉'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 综合评分 -->
+        <view class="score-section">
+          <text class="score-label">综合评分</text>
+          <text class="score-value">{{item.score}}</text>
+          <text class="score-unit">分</text>
+        </view>
       </view>
     </view>
   </view>
@@ -76,28 +168,37 @@
     >
       <text>{{refreshing ? '生成中...' : '换一批'}}</text>
     </button>
-    <button class="action-btn style-btn" bindtap="showStylePicker">
-      <text>调整风格</text>
-    </button>
+    <picker
+      class="style-picker-wrapper"
+      mode="selector"
+      range="{{styleLabels}}"
+      value="{{styleIndex}}"
+      bindchange="onStyleChange"
+    >
+      <button class="action-btn style-btn">
+        <text>调整风格</text>
+      </button>
+    </picker>
   </view>
 
-  <!-- 风格选择器 -->
-  <view class="style-picker-mask {{showStylePicker ? 'show' : ''}}" bindtap="hideStylePicker">
-    <view class="style-picker" catchtap="">
-      <view class="picker-header">
-        <text class="picker-title">选择起名风格</text>
-        <text class="picker-close" bindtap="hideStylePicker">×</text>
+  <!-- 登录弹窗 -->
+  <view class="login-modal" wx:if="{{showLoginModal}}">
+    <view class="login-modal-mask" bindtap="closeLoginModal"></view>
+    <view class="login-modal-content">
+      <view class="login-modal-header">
+        <text class="login-modal-title">登录</text>
+        <view class="login-modal-close" bindtap="closeLoginModal">×</view>
       </view>
-      <view class="style-options">
-        <view
-          class="style-option"
-          wx:for="{{styleOptions}}"
-          wx:key="value"
-          bindtap="selectStyle"
-          data-style="{{item.value}}"
+      <view class="login-modal-body">
+        <text class="login-modal-tip">登录后可使用收藏功能</text>
+        <button
+          class="login-modal-btn {{loginLoading ? 'loading' : ''}}"
+          bindtap="handleLogin"
+          disabled="{{loginLoading}}"
         >
-          <text class="style-label">{{item.label}}</text>
-        </view>
+          <text wx:if="{{!loginLoading}}">微信快捷登录</text>
+          <text wx:else>登录中...</text>
+        </button>
       </view>
     </view>
   </view>

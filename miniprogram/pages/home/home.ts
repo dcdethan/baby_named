@@ -1,25 +1,10 @@
 // pages/home/home.ts
-import { isLoggedIn, checkLoginAndRedirect } from '../../utils/auth'
 
 Page({
   data: {},
 
   onLoad() {
-    // 检查登录状态
-    if (!isLoggedIn()) {
-      wx.redirectTo({
-        url: '/pages/login/login'
-      })
-    }
-  },
-
-  onShow() {
-    // 每次显示页面时检查登录状态
-    if (!isLoggedIn()) {
-      wx.redirectTo({
-        url: '/pages/login/login'
-      })
-    }
+    // 首页无需登录即可使用
   },
 
   /**

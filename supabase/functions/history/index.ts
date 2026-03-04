@@ -1,5 +1,5 @@
 // Supabase Edge Function: history
-// 负责起名历史记录查询的核心逻辑
+// 负责历史记录查询的核心逻辑（包含起名历史和分析历史）
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
@@ -12,9 +12,10 @@ const corsHeaders = {
 
 // 历史记录请求参数
 interface HistoryParams {
-  action: 'list' | 'detail' | 'delete'
+  action: 'list' | 'detail' | 'delete' | 'clearAll'
   openid: string
   recordId?: string  // 详情或删除时使用
+  type?: 'naming' | 'analysis'  // 记录类型
   page?: number
   pageSize?: number
 }
@@ -123,6 +124,33 @@ async function deleteHistory(supabase: any, openid: string, recordId: string) {
 }
 
 /**
+ * 清空历史记录
+ */
+async function clearAllHistory(supabase: any, openid: string, type?: string) {
+  let query = supabase
+    .from('naming_history')
+    .delete()
+    .eq('openid', openid)
+
+  // 如果指定了类型，只删除该类型的记录
+  if (type === 'naming') {
+    // 删除 type 为 'naming' 或者 type 为空（兼容旧数据）
+    query = query.or('type.eq.naming,type.is.null')
+  } else if (type === 'analysis') {
+    query = query.eq('type', 'analysis')
+  }
+
+  const { error } = await query
+
+  if (error) {
+    console.error('清空历史记录失败:', error)
+    throw new Error('清空失败')
+  }
+
+  return true
+}
+
+/**
  * 主处理函数
  */
 serve(async (req) => {
@@ -172,6 +200,10 @@ serve(async (req) => {
           throw new Error('删除需要 recordId 参数')
         }
         result = await deleteHistory(supabase, params.openid, params.recordId)
+        break
+
+      case 'clearAll':
+        result = await clearAllHistory(supabase, params.openid, params.type)
         break
 
       default:

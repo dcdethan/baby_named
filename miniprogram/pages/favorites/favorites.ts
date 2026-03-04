@@ -39,7 +39,7 @@ Page({
 
       if (error) throw error
 
-      const favorites = data.data?.favorites || []
+      const favorites = data.data?.records || []
 
       this.setData({
         namingFavorites: favorites.filter((f: any) => f.type === 'naming'),

@@ -1,12 +1,40 @@
 <!-- pages/history/history.wxml -->
 <view class="history-container">
-  <!-- 历史记录列表 -->
-  <view class="history-list" wx:if="{{records.length > 0}}">
+  <!-- 标签栏 -->
+  <view class="tab-bar">
+    <view
+      class="tab-item {{activeTab === 'naming' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="naming"
+    >
+      <text>起名记录</text>
+      <text class="tab-count">({{namingRecords.length}})</text>
+    </view>
+    <view
+      class="tab-item {{activeTab === 'analysis' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="analysis"
+    >
+      <text>分析记录</text>
+      <text class="tab-count">({{analysisRecords.length}})</text>
+    </view>
+  </view>
+
+  <!-- 清空按钮 -->
+  <view class="clear-bar" wx:if="{{(activeTab === 'naming' && namingRecords.length > 0) || (activeTab === 'analysis' && analysisRecords.length > 0)}}">
+    <view class="clear-btn" bindtap="handleClearAll">
+      <text class="clear-icon">🗑</text>
+      <text>一键清空</text>
+    </view>
+  </view>
+
+  <!-- 起名记录列表 -->
+  <view class="list-section" wx:if="{{activeTab === 'naming'}}">
     <view
       class="history-card"
-      wx:for="{{records}}"
+      wx:for="{{namingRecords}}"
       wx:key="id"
-      bindtap="viewDetail"
+      bindtap="viewNamingDetail"
       data-record="{{item}}"
     >
       <view class="card-header">
@@ -35,16 +63,54 @@
         <text class="view-btn">查看详情 ›</text>
       </view>
     </view>
+
+    <view class="empty-state" wx:if="{{namingRecords.length === 0 && !loading}}">
+      <text class="empty-icon">☰</text>
+      <text class="empty-text">暂无起名记录</text>
+      <text class="empty-tip">去首页开始你的第一次起名吧</text>
+      <navigator url="/pages/home/home" open-type="switchTab" class="go-btn">
+        开始起名
+      </navigator>
+    </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{records.length === 0 && !loading}}">
-    <text class="empty-icon">☰</text>
-    <text class="empty-text">暂无起名历史</text>
-    <text class="empty-tip">去首页开始你的第一次起名吧</text>
-    <navigator url="/pages/home/home" open-type="switchTab" class="go-naming-btn">
-      开始起名
-    </navigator>
+  <!-- 分析记录列表 -->
+  <view class="list-section" wx:if="{{activeTab === 'analysis'}}">
+    <view
+      class="history-card analysis-card"
+      wx:for="{{analysisRecords}}"
+      wx:key="id"
+      bindtap="viewAnalysisDetail"
+      data-record="{{item}}"
+    >
+      <view class="card-header">
+        <text class="fullname">{{item.params.fullName}}</text>
+        <text class="time">{{item.created_at}}</text>
+      </view>
+
+      <view class="card-body">
+        <view class="score-section" wx:if="{{item.result && item.result.overallScore}}">
+          <text class="score-label">综合评分：</text>
+          <text class="score-value">{{item.result.overallScore}}分</text>
+        </view>
+        <view class="analysis-preview" wx:if="{{item.result && item.result.meaning}}">
+          <text class="preview-text">{{item.result.meaning.overall}}</text>
+        </view>
+      </view>
+
+      <view class="card-footer">
+        <text class="view-btn">查看详情 ›</text>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{analysisRecords.length === 0 && !loading}}">
+      <text class="empty-icon">☰</text>
+      <text class="empty-text">暂无分析记录</text>
+      <text class="empty-tip">去首页尝试名字分析功能吧</text>
+      <navigator url="/pages/home/home" open-type="switchTab" class="go-btn">
+        开始分析
+      </navigator>
+    </view>
   </view>
 
   <!-- 加载更多 -->
@@ -52,7 +118,7 @@
     <text>加载中...</text>
   </view>
 
-  <view class="no-more" wx:if="{{!hasMore && records.length > 0}}">
+  <view class="no-more" wx:if="{{!hasMore && ((activeTab === 'naming' && namingRecords.length > 0) || (activeTab === 'analysis' && analysisRecords.length > 0))}}">
     <text>— 已经到底了 —</text>
   </view>
 </view>

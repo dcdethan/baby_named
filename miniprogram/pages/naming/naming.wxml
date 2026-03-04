@@ -136,13 +136,17 @@
       <!-- 笔画数 -->
       <view class="form-item">
         <text class="form-label">笔画数</text>
-        <input
-          class="form-input"
-          type="number"
-          placeholder="名字部分的总笔画数"
-          value="{{strokeCount}}"
-          bindinput="onStrokeCountInput"
-        />
+        <picker
+          mode="selector"
+          range="{{strokeCountOptions}}"
+          range-key="label"
+          value="{{strokeCountIndex}}"
+          bindchange="onStrokeCountChange"
+        >
+          <view class="picker-value">
+            {{strokeCountOptions[strokeCountIndex].label}}
+          </view>
+        </picker>
       </view>
     </view>
   </view>

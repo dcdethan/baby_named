@@ -2,22 +2,78 @@
 <view class="analysis-container">
   <!-- 输入区域 -->
   <view class="input-section">
-    <view class="input-wrapper">
+    <view class="input-group">
+      <view class="input-label">姓名</view>
       <input
         class="name-input"
-        placeholder="请输入要分析的姓名"
+        placeholder="请输入要分析的姓名（2-4字）"
         value="{{fullName}}"
         bindinput="onNameInput"
         bindblur="onNameBlur"
+        maxlength="20"
       />
-      <button
-        class="analyze-btn {{loading ? 'loading' : ''}}"
-        bindtap="handleAnalyze"
-        disabled="{{loading}}"
-      >
-        {{loading ? '分析中...' : '立即分析'}}
-      </button>
     </view>
+
+    <!-- 性别选择 -->
+    <view class="gender-section">
+      <text class="gender-label">性别</text>
+      <view class="gender-options">
+        <view class="gender-btn {{gender === 'male' ? 'active' : ''}}" bindtap="selectGenderMale">♂ 男</view>
+        <view class="gender-btn {{gender === 'female' ? 'active' : ''}}" bindtap="selectGenderFemale">♀ 女</view>
+      </view>
+    </view>
+
+    <!-- 生日选项 -->
+    <view class="birthday-toggle">
+      <view class="toggle-left">
+        <text class="toggle-label">填写生日</text>
+        <text class="toggle-hint">（可启用五行数理分析）</text>
+      </view>
+      <switch
+        checked="{{hasBirthday}}"
+        bindchange="onBirthdayToggle"
+        color="#667eea"
+      />
+    </view>
+
+    <!-- 生日选择器 -->
+    <view class="birthday-picker" wx:if="{{hasBirthday}}">
+      <view class="picker-row">
+        <text class="picker-label">出生日期</text>
+        <picker
+          mode="date"
+          value="{{birthday}}"
+          start="{{startDate}}"
+          end="{{endDate}}"
+          bindchange="onBirthdayChange"
+        >
+          <view class="picker-value {{birthday ? '' : 'placeholder'}}">
+            {{birthday || '请选择'}}
+          </view>
+        </picker>
+      </view>
+      <view class="picker-row">
+        <text class="picker-label">出生时辰</text>
+        <picker
+          mode="selector"
+          range="{{hourOptions}}"
+          value="{{hourIndex}}"
+          bindchange="onHourChange"
+        >
+          <view class="picker-value {{hourIndex > 0 ? '' : 'placeholder'}}">
+            {{hourOptions[hourIndex]}}
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <button
+      class="analyze-btn {{loading ? 'loading' : ''}}"
+      bindtap="handleAnalyze"
+      disabled="{{loading}}"
+    >
+      {{loading ? '分析中...' : '立即分析'}}
+    </button>
   </view>
 
   <!-- 分析结果 -->
@@ -25,75 +81,104 @@
     <!-- 基础信息 -->
     <view class="result-card">
       <view class="card-title">基础信息</view>
-      <view class="info-row">
-        <text class="info-label">姓氏</text>
-        <text class="info-value">{{result.basicInfo.surname}}</text>
+      <view class="info-list">
+        <view class="info-row">
+          <text class="info-label">读音</text>
+          <text class="info-value">{{result.basicInfo.fullPinyin}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">笔画</text>
+          <text class="info-value">{{result.basicInfo.totalStrokes}}画</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">结构</text>
+          <text class="info-value">{{result.basicInfo.structure}}</text>
+        </view>
       </view>
-      <view class="info-row">
-        <text class="info-label">名字</text>
-        <text class="info-value">{{result.basicInfo.givenName}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">总笔画</text>
-        <text class="info-value">{{result.basicInfo.totalStrokes}}画</text>
-      </view>
-    </view>
-
-    <!-- 读音分析 -->
-    <view class="result-card">
-      <view class="card-title">读音分析</view>
-      <view class="info-row">
-        <text class="info-label">拼音</text>
-        <text class="info-value">{{result.pronunciation.pinyin}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">声调</text>
-        <text class="info-value">{{result.pronunciation.tone}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">音韵</text>
-        <text class="info-value">{{result.pronunciation.harmony}}</text>
+      <view class="info-analysis" wx:if="{{result.basicInfo.analysis}}">
+        <view class="analysis-label">综合分析</view>
+        <text class="analysis-text">{{result.basicInfo.analysis}}</text>
       </view>
     </view>
 
-    <!-- 字形结构 -->
+    <!-- 字义内涵 -->
     <view class="result-card">
-      <view class="card-title">字形结构</view>
-      <view class="chars-grid">
-        <view class="char-item" wx:for="{{result.structure.chars}}" wx:key="char">
-          <text class="char-text">{{item.char}}</text>
-          <view class="char-detail">
-            <text class="detail-item">{{item.strokes}}画</text>
-            <text class="detail-item">{{item.radical}}部</text>
-            <text class="detail-item">{{item.structure}}</text>
+      <view class="card-title">字义内涵</view>
+      <view class="char-meanings">
+        <view class="char-meaning-item" wx:for="{{result.charMeanings}}" wx:key="char">
+          <view class="char-header">
+            <text class="char-big">{{item.char}}</text>
+            <text class="char-pinyin">{{item.pinyin}}</text>
+          </view>
+          <text class="char-meaning-text">{{item.meaning}}</text>
+        </view>
+      </view>
+      <view class="combined-meaning" wx:if="{{result.combinedMeaning}}">
+        <view class="meaning-label">组合寓意</view>
+        <text class="meaning-text">{{result.combinedMeaning}}</text>
+      </view>
+    </view>
+
+    <!-- 文化背景 -->
+    <view class="result-card" wx:if="{{result.culturalBackground}}">
+      <view class="card-title">文化背景</view>
+      <text class="content-text">{{result.culturalBackground}}</text>
+    </view>
+
+    <!-- 五行数理（仅在填写生日时显示） -->
+    <view class="result-card" wx:if="{{hasBirthday && result.wuxingShuli}}">
+      <view class="card-title">五行数理</view>
+      <view class="wuxing-section">
+        <view class="wuxing-item">
+          <text class="wuxing-label">八字</text>
+          <text class="wuxing-value">{{result.wuxingShuli.bazi}}</text>
+        </view>
+        <view class="wuxing-item">
+          <text class="wuxing-label">五行</text>
+          <view class="wuxing-tags">
+            <text class="wuxing-tag" wx:for="{{result.wuxingShuli.wuxing}}" wx:key="*this">{{item}}</text>
           </view>
         </view>
-      </view>
-    </view>
-
-    <!-- 寓意解读 -->
-    <view class="result-card">
-      <view class="card-title">寓意解读</view>
-      <view class="meaning-content">
-        <text class="interpretation">{{result.meaning.interpretation}}</text>
-        <view class="origin" wx:if="{{result.meaning.origin}}">
-          <text class="origin-label">出处：</text>
-          <text class="origin-text">{{result.meaning.origin}}</text>
+        <view class="wuxing-item">
+          <text class="wuxing-label">五行分析</text>
+          <text class="wuxing-value">{{result.wuxingShuli.wuxingAnalysis}}</text>
         </view>
-        <view class="cultural" wx:if="{{result.meaning.culturalRef}}">
-          <text class="cultural-label">文化背景：</text>
-          <text class="cultural-text">{{result.meaning.culturalRef}}</text>
+        <view class="wuxing-item" wx:if="{{result.wuxingShuli.shuli}}">
+          <text class="wuxing-label">数理</text>
+          <text class="wuxing-value">{{result.wuxingShuli.shuli}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 建议 -->
-    <view class="result-card" wx:if="{{result.suggestions.length > 0}}">
-      <view class="card-title">参考建议</view>
-      <view class="suggestions-list">
-        <view class="suggestion-item" wx:for="{{result.suggestions}}" wx:key="index">
-          <text class="suggestion-num">{{index + 1}}</text>
-          <text class="suggestion-text">{{item}}</text>
+    <!-- 流行趋势 -->
+    <view class="result-card" wx:if="{{result.popularity}}">
+      <view class="card-title">流行趋势</view>
+      <view class="popularity-section">
+        <view class="popularity-item" wx:for="{{result.popularity.charFrequency}}" wx:key="char">
+          <text class="pop-char">{{item.char}}</text>
+          <view class="pop-bar-wrapper">
+            <view class="pop-bar" style="width: {{item.frequency}}%"></view>
+          </view>
+          <text class="pop-level">{{item.level}}</text>
+        </view>
+        <view class="duplicate-rate" wx:if="{{result.popularity.duplicateRate}}">
+          <text class="dup-label">重名概率</text>
+          <text class="dup-value">{{result.popularity.duplicateRate}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 适配和优化建议 -->
+    <view class="result-card" wx:if="{{result.suggestions}}">
+      <view class="card-title">适配和优化建议</view>
+      <view class="suggestion-section">
+        <view class="suggestion-item" wx:if="{{result.suggestions.compatibility}}">
+          <text class="sug-label">适配分析</text>
+          <text class="sug-text">{{result.suggestions.compatibility}}</text>
+        </view>
+        <view class="suggestion-item" wx:if="{{result.suggestions.optimization}}">
+          <text class="sug-label">优化方向</text>
+          <text class="sug-text">{{result.suggestions.optimization}}</text>
         </view>
       </view>
     </view>
@@ -109,5 +194,27 @@
       <text class="btn-icon">↗</text>
       <text>分享</text>
     </button>
+  </view>
+
+  <!-- 登录弹窗 -->
+  <view class="login-modal" wx:if="{{showLoginModal}}">
+    <view class="login-modal-mask" bindtap="closeLoginModal"></view>
+    <view class="login-modal-content">
+      <view class="login-modal-header">
+        <text class="login-modal-title">登录</text>
+        <view class="login-modal-close" bindtap="closeLoginModal">×</view>
+      </view>
+      <view class="login-modal-body">
+        <text class="login-modal-tip">登录后可使用收藏功能</text>
+        <button
+          class="login-modal-btn {{loginLoading ? 'loading' : ''}}"
+          bindtap="handleLogin"
+          disabled="{{loginLoading}}"
+        >
+          <text wx:if="{{!loginLoading}}">微信快捷登录</text>
+          <text wx:else>登录中...</text>
+        </button>
+      </view>
+    </view>
   </view>
 </view>

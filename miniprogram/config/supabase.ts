@@ -10,5 +10,6 @@ export const EDGE_FUNCTIONS = {
   nameAnalysis: 'name-analysis',
   favorites: 'favorites',
   characterLibrary: 'character-library',
-  history: 'history'
+  history: 'history',
+  userQuota: 'user-quota',
 }

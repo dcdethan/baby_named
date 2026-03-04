@@ -2,6 +2,7 @@
 import { invokeEdgeFunction } from '../../utils/supabase'
 import { EDGE_FUNCTIONS } from '../../config/supabase'
 import { getOpenId } from '../../utils/auth'
+import { checkAndIncrementQuota } from '../../utils/quota'
 
 // 风格选项
 const STYLE_OPTIONS = [
@@ -17,6 +18,16 @@ const STYLE_OPTIONS = [
 const NAME_TYPE_OPTIONS = [
   { value: 'double', label: '双字名' },
   { value: 'single', label: '单字名' }
+]
+
+// 笔画数选项
+const STROKE_COUNT_OPTIONS = [
+  { value: '', label: '不限制' },
+  { value: '10', label: '<10画' },
+  { value: '15', label: '<15画' },
+  { value: '20', label: '<20画' },
+  { value: '25', label: '<25画' },
+  { value: '30', label: '<30画' }
 ]
 
 Page({
@@ -42,7 +53,8 @@ Page({
     nameTypeIndex: 0,
     disabledChars: '',
     preferredChars: '',
-    strokeCount: '',
+    strokeCountOptions: STROKE_COUNT_OPTIONS,
+    strokeCountIndex: 0,
 
     // 日期选择器
     startDate: '1990-01-01',
@@ -152,9 +164,9 @@ Page({
     this.setData({ preferredChars: e.detail.value })
   },
 
-  // 笔画数输入
-  onStrokeCountInput(e: any) {
-    this.setData({ strokeCount: e.detail.value })
+  // 笔画数选择
+  onStrokeCountChange(e: any) {
+    this.setData({ strokeCountIndex: parseInt(e.detail.value) })
   },
 
   // 表单验证
@@ -211,9 +223,17 @@ Page({
         if (this.data.preferredChars.trim()) {
           params.customOptions.preferredChars = this.data.preferredChars.trim().split('')
         }
-        if (this.data.strokeCount) {
-          params.customOptions.strokeCount = parseInt(this.data.strokeCount)
+        const strokeValue = STROKE_COUNT_OPTIONS[this.data.strokeCountIndex].value
+        if (strokeValue) {
+          params.customOptions.maxStrokeCount = parseInt(strokeValue)
         }
+      }
+
+      // 检查起名次数
+      const allowed = await checkAndIncrementQuota('naming')
+      if (!allowed) {
+        this.setData({ loading: false })
+        return
       }
 
       // 调用云函数
@@ -235,6 +255,13 @@ Page({
       const resultData = fullResponse.data || fullResponse
       console.log('提取的结果数据:', JSON.stringify(resultData))
       console.log('names 数组:', JSON.stringify(resultData.names))
+      console.log('bazi 对象:', JSON.stringify(resultData.bazi))
+      if (resultData.bazi) {
+        console.log('bazi.yearWuxing:', resultData.bazi.yearWuxing)
+        console.log('bazi.monthWuxing:', resultData.bazi.monthWuxing)
+        console.log('bazi.dayWuxing:', resultData.bazi.dayWuxing)
+        console.log('bazi.hourWuxing:', resultData.bazi.hourWuxing)
+      }
 
       app.globalData = app.globalData || {}
       app.globalData.namingResult = {
