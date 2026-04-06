@@ -1,7 +1,8 @@
-// supabase/functions/user-quota/quota.ts
-// 核心业务逻辑（与 HTTP 层解耦，便于单元测试）
+﻿// supabase/functions/user-quota/quota.ts
+// Core quota logic: total usage across naming/analysis/library by openid
 
-export const FREE_LIMIT = 10
+export const NORMAL_LIMIT = 10
+export const MEMBER_LIMIT = 10000
 
 export type QuotaType = 'naming' | 'analysis' | 'library'
 
@@ -16,17 +17,31 @@ export interface QuotaCheckResult {
   count: number
   remaining: number
   isWhitelisted?: boolean
+  limit?: number
+  openid?: string
+  totalCount?: number
+  usage?: {
+    namingCount: number
+    analysisCount: number
+    libraryCount: number
+  }
 }
 
 export interface QuotaData {
+  openid: string
   namingCount: number
   analysisCount: number
   libraryCount: number
+  totalCount: number
   limit: number
   isWhitelisted: boolean
 }
 
-/** 判断 openid 是否在白名单中 */
+function getTotalCount(usage: any): number {
+  return (usage?.naming_count ?? 0) + (usage?.analysis_count ?? 0) + (usage?.library_count ?? 0)
+}
+
+/** Check whether openid is a member (whitelist). */
 export async function isUserWhitelisted(supabase: any, openid: string): Promise<boolean> {
   const { data, error } = await supabase
     .from('user_whitelist')
@@ -38,7 +53,7 @@ export async function isUserWhitelisted(supabase: any, openid: string): Promise<
   return data !== null
 }
 
-/** 获取使用次数（同时返回白名单状态） */
+/** Get current quota snapshot. */
 export async function getQuota(supabase: any, openid: string): Promise<QuotaData> {
   const [usageResult, whitelistResult] = await Promise.all([
     supabase
@@ -55,30 +70,30 @@ export async function getQuota(supabase: any, openid: string): Promise<QuotaData
 
   if (usageResult.error) throw usageResult.error
 
+  const isWhitelisted = whitelistResult.data !== null
+  const limit = isWhitelisted ? MEMBER_LIMIT : NORMAL_LIMIT
+
   return {
+    openid,
     namingCount: usageResult.data?.naming_count ?? 0,
     analysisCount: usageResult.data?.analysis_count ?? 0,
     libraryCount: usageResult.data?.library_count ?? 0,
-    limit: FREE_LIMIT,
-    isWhitelisted: whitelistResult.data !== null,
+    totalCount: getTotalCount(usageResult.data),
+    limit,
+    isWhitelisted,
   }
 }
 
-/** 检查次数并自增 */
+/** Check and increment usage by type, but enforce by total count. */
 export async function checkAndIncrementUsage(
   supabase: any,
   openid: string,
   type: QuotaType,
 ): Promise<QuotaCheckResult> {
-  // 白名单用户直接放行
-  const whitelisted = await isUserWhitelisted(supabase, openid)
-  if (whitelisted) {
-    return { allowed: true, count: 0, remaining: -1, isWhitelisted: true }
-  }
-
   const field = COUNT_FIELD[type]
+  const isWhitelisted = await isUserWhitelisted(supabase, openid)
+  const limit = isWhitelisted ? MEMBER_LIMIT : NORMAL_LIMIT
 
-  // 获取或创建使用记录
   let { data: usage, error: fetchError } = await supabase
     .from('user_usage')
     .select('naming_count, analysis_count, library_count')
@@ -98,20 +113,47 @@ export async function checkAndIncrementUsage(
     usage = newRecord
   }
 
-  const currentCount: number = usage[field] ?? 0
-
-  if (currentCount >= FREE_LIMIT) {
-    return { allowed: false, count: currentCount, remaining: 0 }
+  const currentTotal = getTotalCount(usage)
+  if (currentTotal >= limit) {
+    return {
+      allowed: false,
+      count: currentTotal,
+      remaining: 0,
+      isWhitelisted,
+      limit,
+      openid,
+      totalCount: currentTotal,
+      usage: {
+        namingCount: usage.naming_count ?? 0,
+        analysisCount: usage.analysis_count ?? 0,
+        libraryCount: usage.library_count ?? 0,
+      },
+    }
   }
 
-  // 自增
+  const currentTypeCount = usage[field] ?? 0
   const { error: updateError } = await supabase
     .from('user_usage')
-    .update({ [field]: currentCount + 1, updated_at: new Date().toISOString() })
+    .update({ [field]: currentTypeCount + 1, updated_at: new Date().toISOString() })
     .eq('openid', openid)
 
   if (updateError) throw updateError
 
-  const newCount = currentCount + 1
-  return { allowed: true, count: newCount, remaining: FREE_LIMIT - newCount }
+  const newTotal = currentTotal + 1
+  const updatedUsage = {
+    namingCount: field === 'naming_count' ? currentTypeCount + 1 : (usage.naming_count ?? 0),
+    analysisCount: field === 'analysis_count' ? currentTypeCount + 1 : (usage.analysis_count ?? 0),
+    libraryCount: field === 'library_count' ? currentTypeCount + 1 : (usage.library_count ?? 0),
+  }
+
+  return {
+    allowed: true,
+    count: newTotal,
+    remaining: limit - newTotal,
+    isWhitelisted,
+    limit,
+    openid,
+    totalCount: newTotal,
+    usage: updatedUsage,
+  }
 }

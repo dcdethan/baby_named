@@ -198,12 +198,12 @@ async function saveToHistory(supabase: any, params: AnalysisParams, result: any)
 }
 
 /**
- * 调用 DeepSeek API 进行名字分析
+ * 调用 Qwen API 进行名字分析
  */
 async function analyzeNameWithAI(fullName: string, gender: 'male' | 'female', hasBirthday: boolean, baziInfo: any) {
-  const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
+  const apiKey = Deno.env.get('QWEN_API_KEY')
   if (!apiKey) {
-    throw new Error('DEEPSEEK_API_KEY 未配置')
+    throw new Error('QWEN_API_KEY 未配置')
   }
 
   const genderText = gender === 'male' ? '男' : '女'
@@ -290,14 +290,14 @@ ${wuxingPrompt}
 ${hasBirthday ? '- wuxingShuli 字段必须包含' : '- 不要包含 wuxingShuli 字段'}
 - 请直接输出 JSON，不要有任何其他文字。`
 
-  const response = await fetch('https://api.deepseek.com/chat/completions', {
+  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: 'qwen3-30b-a3b-instruct-2507',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 3000
@@ -306,7 +306,7 @@ ${hasBirthday ? '- wuxingShuli 字段必须包含' : '- 不要包含 wuxingShuli
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('DeepSeek API 调用失败:', error)
+    console.error('Qwen API 调用失败:', error)
     throw new Error(`AI 调用失败: ${response.status}`)
   }
 

@@ -1,6 +1,5 @@
-<!-- pages/library/library.wxml -->
+﻿<!-- pages/library/library.wxml -->
 <view class="library-container">
-  <!-- 搜索区域 -->
   <view class="search-section">
     <view class="search-box">
       <input
@@ -15,7 +14,6 @@
     </view>
   </view>
 
-  <!-- 分类导航栏 -->
   <scroll-view class="category-nav" scroll-x enable-flex>
     <view
       class="category-item {{activeCategory === item.value ? 'active' : ''}}"
@@ -28,7 +26,11 @@
     </view>
   </scroll-view>
 
-  <!-- 单字列表 -->
+  <view class="library-toolbar" wx:if="{{!searchKeyword}}">
+    <text class="toolbar-tip">当前展示 {{chars.length}} 个字</text>
+    <button class="refresh-btn" bindtap="refreshCategory" loading="{{loading}}" disabled="{{loading}}">换一批</button>
+  </view>
+
   <view class="chars-section">
     <view class="chars-grid" wx:if="{{chars.length > 0}}">
       <view
@@ -43,20 +45,17 @@
       </view>
     </view>
 
-    <!-- 空状态 -->
     <view class="empty-state" wx:if="{{chars.length === 0 && !loading}}">
       <view class="empty-icon">字</view>
       <text class="empty-text">暂无数据</text>
       <text class="empty-tip">请尝试其他分类或搜索条件</text>
     </view>
 
-    <!-- 加载状态 -->
     <view class="loading-state" wx:if="{{loading}}">
       <text class="loading-text">加载中...</text>
     </view>
   </view>
 
-  <!-- 单字详情弹窗 -->
   <view class="detail-modal {{showDetail ? 'show' : ''}}" bindtap="hideCharDetail">
     <view class="detail-content" catchtap="stopPropagation">
       <view class="detail-close" bindtap="hideCharDetail">×</view>

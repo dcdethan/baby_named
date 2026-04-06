@@ -4,7 +4,6 @@
   background: #f5f6fa;
 }
 
-/* ============ 搜索区域 ============ */
 .search-section {
   background: #fff;
   padding: 20rpx 30rpx;
@@ -49,7 +48,6 @@
   border: none;
 }
 
-/* ============ 分类导航栏 ============ */
 .category-nav {
   background: #fff;
   white-space: nowrap;
@@ -86,7 +84,33 @@
   font-weight: bold;
 }
 
-/* ============ 单字列表 ============ */
+.library-toolbar {
+  margin: 16rpx 30rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-tip {
+  font-size: 24rpx;
+  color: #777;
+}
+
+.refresh-btn {
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 26rpx;
+  border-radius: 28rpx;
+  border: none;
+  color: #4f57d9;
+  background: #eef0ff;
+  font-size: 24rpx;
+}
+
+.refresh-btn::after {
+  border: none;
+}
+
 .chars-section {
   padding: 20rpx 30rpx 40rpx;
   min-height: 60vh;
@@ -142,7 +166,6 @@
   white-space: nowrap;
 }
 
-/* ============ 空状态 ============ */
 .empty-state {
   text-align: center;
   padding: 120rpx 40rpx;
@@ -175,7 +198,6 @@
   color: #bbb;
 }
 
-/* ============ 加载状态 ============ */
 .loading-state {
   text-align: center;
   padding: 80rpx 40rpx;
@@ -186,7 +208,6 @@
   color: #999;
 }
 
-/* ============ 详情弹窗 ============ */
 .detail-modal {
   position: fixed;
   top: 0;

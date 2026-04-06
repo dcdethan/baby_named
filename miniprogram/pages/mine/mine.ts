@@ -1,8 +1,13 @@
-// pages/mine/mine.ts
+﻿// pages/mine/mine.ts
 import { isLoggedIn, getUser, logout, login, getOpenId, UserInfo } from '../../utils/auth'
 import { invokeEdgeFunction } from '../../utils/supabase'
 import { EDGE_FUNCTIONS } from '../../config/supabase'
 import { FREE_LIMIT } from '../../utils/quota'
+
+function toNumber(v: any): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
 
 Page({
   data: {
@@ -13,11 +18,7 @@ Page({
     showLoginModal: false,
     loginLoading: false,
     pendingAction: '' as 'favorites' | 'history' | '',
-    usageData: {
-      namingCount: 0,
-      analysisCount: 0,
-      libraryCount: 0,
-    },
+    totalCount: 0,
     freeLimit: FREE_LIMIT,
     isWhitelisted: false,
   },
@@ -31,35 +32,39 @@ Page({
     this.loadUsageData()
   },
 
-  /**
-   * 加载使用次数数据
-   */
   async loadUsageData() {
     const openid = getOpenId()
     if (!openid) return
 
-    try {
+    const fetchOnce = async () => {
       const { data } = await invokeEdgeFunction(EDGE_FUNCTIONS.userQuota, {
         action: 'getQuota',
         openid,
       })
-      const quota = (data as any)?.data
-      if (quota) {
-        this.setData({
-          usageData: {
-            namingCount: quota.namingCount ?? 0,
-            analysisCount: quota.analysisCount ?? 0,
-            libraryCount: quota.libraryCount ?? 0,
-          },
-          isWhitelisted: quota.isWhitelisted ?? false,
-        })
-      }
+
+      const payload = (data as any)?.data || data || {}
+      const namingCount = toNumber(payload.namingCount)
+      const analysisCount = toNumber(payload.analysisCount)
+      const libraryCount = toNumber(payload.libraryCount)
+      const fallbackTotal = namingCount + analysisCount + libraryCount
+      const totalCount = toNumber(payload.totalCount) || fallbackTotal
+
+      this.setData({
+        totalCount,
+        freeLimit: toNumber(payload.limit) || FREE_LIMIT,
+        isWhitelisted: !!payload.isWhitelisted,
+      })
+    }
+
+    try {
+      await fetchOnce()
+      // Avoid showing stale count right after a quota increment request.
+      setTimeout(() => {
+        fetchOnce().catch(() => {})
+      }, 300)
     } catch {}
   },
 
-  /**
-   * 复制开发者微信号
-   */
   copyDeveloperWechat() {
     wx.setClipboardData({
       data: '15533545868',
@@ -69,9 +74,6 @@ Page({
     })
   },
 
-  /**
-   * 检查登录状态
-   */
   checkLoginStatus() {
     const loggedIn = isLoggedIn()
     const user = getUser()
@@ -82,9 +84,6 @@ Page({
     })
   },
 
-  /**
-   * 跳转到我的收藏
-   */
   goToFavorites() {
     if (!this.data.isLoggedIn) {
       this.setData({
@@ -98,9 +97,6 @@ Page({
     })
   },
 
-  /**
-   * 跳转到起名历史
-   */
   goToHistory() {
     if (!this.data.isLoggedIn) {
       this.setData({
@@ -114,9 +110,6 @@ Page({
     })
   },
 
-  /**
-   * 关闭登录弹窗
-   */
   closeLoginModal() {
     this.setData({
       showLoginModal: false,
@@ -124,9 +117,6 @@ Page({
     })
   },
 
-  /**
-   * 处理微信登录
-   */
   async handleLogin() {
     if (this.data.loginLoading) return
 
@@ -140,14 +130,14 @@ Page({
         icon: 'success'
       })
 
-      // 更新登录状态
       this.setData({
         isLoggedIn: true,
         user: user,
         showLoginModal: false
       })
 
-      // 执行待处理的操作
+      this.loadUsageData()
+
       const pendingAction = this.data.pendingAction
       this.setData({ pendingAction: '' })
 
@@ -170,9 +160,6 @@ Page({
     }
   },
 
-  /**
-   * 点击用户卡片
-   */
   onUserCardTap() {
     if (!this.data.isLoggedIn) {
       this.setData({
@@ -182,9 +169,6 @@ Page({
     }
   },
 
-  /**
-   * 意见反馈
-   */
   handleFeedback() {
     wx.showModal({
       title: '意见反馈',
@@ -194,9 +178,6 @@ Page({
     })
   },
 
-  /**
-   * 退出登录
-   */
   handleLogout() {
     wx.showModal({
       title: '确认退出',
@@ -206,7 +187,10 @@ Page({
           logout()
           this.setData({
             isLoggedIn: false,
-            user: null
+            user: null,
+            totalCount: 0,
+            freeLimit: FREE_LIMIT,
+            isWhitelisted: false,
           })
           wx.showToast({
             title: '已退出登录',

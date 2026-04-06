@@ -1,13 +1,8 @@
-<!-- pages/mine/mine.wxml -->
+﻿<!-- pages/mine/mine.wxml -->
 <view class="mine-container">
-  <!-- 用户信息卡片 -->
   <view class="user-card">
     <view class="user-info" bindtap="onUserCardTap">
-      <image
-        class="avatar"
-        src="{{user.avatarUrl || defaultAvatar}}"
-        mode="aspectFill"
-      />
+      <image class="avatar" src="{{user.avatarUrl || defaultAvatar}}" mode="aspectFill" />
       <view class="user-detail">
         <text class="nickname">{{user.nickname || defaultNickname}}</text>
         <text class="user-id" wx:if="{{isLoggedIn}}">ID: {{user.id}}</text>
@@ -16,98 +11,55 @@
     </view>
   </view>
 
-  <!-- 功能列表 -->
   <view class="menu-section">
     <view class="menu-item" bindtap="goToFavorites">
-      <view class="menu-icon favorites-icon">
-        <text class="icon-text">★</text>
-      </view>
+      <view class="menu-icon favorites-icon"><text class="icon-text">★</text></view>
       <text class="menu-title">我的收藏</text>
       <text class="menu-arrow">›</text>
     </view>
 
     <view class="menu-item" bindtap="goToHistory">
-      <view class="menu-icon history-icon">
-        <text class="icon-text">☰</text>
-      </view>
+      <view class="menu-icon history-icon"><text class="icon-text">⏱</text></view>
       <text class="menu-title">历史记录</text>
       <text class="menu-arrow">›</text>
     </view>
   </view>
 
-  <!-- 使用次数 -->
   <view class="usage-section" wx:if="{{isLoggedIn}}">
-    <!-- 白名单用户：显示已解锁 -->
-    <view wx:if="{{isWhitelisted}}" class="whitelist-banner">
-      <text class="whitelist-icon">✦</text>
-      <view class="whitelist-info">
-        <text class="whitelist-title">已解锁无限次使用</text>
-        <text class="whitelist-sub">三项功能均无次数限制</text>
+    <view class="usage-header">
+      <text class="usage-title">总请求次数</text>
+      <text class="usage-limit">{{totalCount}} / {{freeLimit}}</text>
+    </view>
+
+    <view class="usage-item">
+      <view class="usage-bar">
+        <view class="usage-bar-fill {{totalCount >= freeLimit ? 'full' : ''}}" style="width: {{totalCount >= freeLimit ? 100 : (totalCount / freeLimit * 100)}}%"></view>
       </view>
     </view>
 
-    <!-- 普通用户：显示进度条 -->
-    <block wx:else>
-      <view class="usage-header">
-        <text class="usage-title">免费次数使用情况</text>
-        <text class="usage-limit">每项限 {{freeLimit}} 次</text>
-      </view>
-      <view class="usage-item">
-        <view class="usage-item-info">
-          <text class="usage-item-name">智慧起名</text>
-          <text class="usage-item-count">{{usageData.namingCount}}/{{freeLimit}}</text>
-        </view>
-        <view class="usage-bar">
-          <view class="usage-bar-fill {{usageData.namingCount >= freeLimit ? 'full' : ''}}" style="width: {{usageData.namingCount >= freeLimit ? 100 : (usageData.namingCount / freeLimit * 100)}}%"></view>
-        </view>
-      </view>
-      <view class="usage-item">
-        <view class="usage-item-info">
-          <text class="usage-item-name">名字分析</text>
-          <text class="usage-item-count">{{usageData.analysisCount}}/{{freeLimit}}</text>
-        </view>
-        <view class="usage-bar">
-          <view class="usage-bar-fill {{usageData.analysisCount >= freeLimit ? 'full' : ''}}" style="width: {{usageData.analysisCount >= freeLimit ? 100 : (usageData.analysisCount / freeLimit * 100)}}%"></view>
-        </view>
-      </view>
-      <view class="usage-item">
-        <view class="usage-item-info">
-          <text class="usage-item-name">起名字库</text>
-          <text class="usage-item-count">{{usageData.libraryCount}}/{{freeLimit}}</text>
-        </view>
-        <view class="usage-bar">
-          <view class="usage-bar-fill {{usageData.libraryCount >= freeLimit ? 'full' : ''}}" style="width: {{usageData.libraryCount >= freeLimit ? 100 : (usageData.libraryCount / freeLimit * 100)}}%"></view>
-        </view>
-      </view>
-      <view class="usage-tip" bindtap="copyDeveloperWechat">
-        <text class="usage-tip-text">次数用完？联系开发者微信：15533545868（点击复制）</text>
-      </view>
-    </block>
+    <view class="usage-tip" bindtap="copyDeveloperWechat">
+      <text class="usage-tip-text" wx:if="{{isWhitelisted}}">当前标签：会员（总额度 {{freeLimit}} 次）</text>
+      <text class="usage-tip-text" wx:else>超出后请联系管理员微信：15533545868（点击复制）</text>
+    </view>
   </view>
 
-  <!-- 其他选项 -->
   <view class="menu-section">
     <view class="menu-item" bindtap="handleFeedback">
-      <view class="menu-icon feedback-icon">
-        <text class="icon-text">✉</text>
-      </view>
+      <view class="menu-icon feedback-icon"><text class="icon-text">✉</text></view>
       <text class="menu-title">意见反馈</text>
       <text class="menu-arrow">›</text>
     </view>
   </view>
 
-  <!-- 退出登录 -->
   <view class="logout-section" wx:if="{{isLoggedIn}}">
     <button class="logout-btn" bindtap="handleLogout">退出登录</button>
   </view>
 
-  <!-- 底部版权 -->
   <view class="footer">
     <text class="copyright">起名宝典 v1.0.0</text>
     <text class="copyright">© 2024 All Rights Reserved</text>
   </view>
 
-  <!-- 登录弹窗 -->
   <view class="login-modal" wx:if="{{showLoginModal}}">
     <view class="login-modal-mask" bindtap="closeLoginModal"></view>
     <view class="login-modal-content">
@@ -117,11 +69,7 @@
       </view>
       <view class="login-modal-body">
         <text class="login-modal-tip">登录后可使用收藏和历史记录功能</text>
-        <button
-          class="login-modal-btn {{loginLoading ? 'loading' : ''}}"
-          bindtap="handleLogin"
-          disabled="{{loginLoading}}"
-        >
+        <button class="login-modal-btn {{loginLoading ? 'loading' : ''}}" bindtap="handleLogin" disabled="{{loginLoading}}">
           <text wx:if="{{!loginLoading}}">微信快捷登录</text>
           <text wx:else>登录中...</text>
         </button>
